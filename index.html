@@ -1,0 +1,4345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NSPM SmartAttendance - Staff Portal</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <!-- Paystack Inline JS -->
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase Configuration -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBN0KexNQkEegTvAUA815xJrBqPUa45SOk",
+            authDomain: "smarttendance-a355b.firebaseapp.com",
+            databaseURL: "https://smarttendance-a355b-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "smarttendance-a355b",
+            storageBucket: "smarttendance-a355b.firebasestorage.app",
+            messagingSenderId: "448589697375",
+            appId: "1:448589697375:web:d5b02d378ba9746a68a6ea"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+        console.log("Firebase initialized successfully!");
+    </script>
+    
+    <style>
+        /* Global Styles - UPDATED COLORS FOR NSPM */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --primary: #1e40af; /* Deep blue for NSPM */
+            --secondary: #3b82f6;
+            --danger: #dc2626;
+            --warning: #f59e0b;
+            --success: #059669;
+            --dark: #0f172a;
+            --darker: #1e293b;
+            --light: #f8fafc;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            background: var(--dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode {
+            --primary: #1e3a8a;
+            --secondary: #2563eb;
+            --danger: #b91c1c;
+            --success: #047857;
+            --warning: #d97706;
+            --dark: #f1f5f9;
+            --darker: #e2e8f0;
+            --light: #ffffff;
+            --card-bg: #ffffff;
+            --card-border: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #475569;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Authentication Styles */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        body.light-mode .auth-container {
+            background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
+        }
+        
+        .auth-box {
+            background: #1e293b;
+            width: 100%;
+            max-width: 450px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        
+        body.light-mode .auth-box {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .auth-header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #3b82f6;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid #334155;
+        }
+        
+        body.light-mode .auth-header {
+            background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
+            color: #1e40af;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        
+        .auth-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .auth-header p {
+            opacity: 0.9;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        
+        body.light-mode .auth-header p {
+            color: #475569;
+        }
+        
+        .auth-body {
+            padding: 30px 25px;
+        }
+        
+        /* Staff Badge */
+        .staff-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px;
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 12px;
+            gap: 10px;
+            border: 1px solid #3b82f6;
+        }
+        
+        body.light-mode .staff-badge {
+            background: #e2e8f0;
+            border: 1px solid #1e40af;
+        }
+        
+        .staff-badge span {
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        /* Form Toggle */
+        .form-toggle {
+            display: flex;
+            margin-bottom: 25px;
+            background: #1e293b;
+            border-radius: 10px;
+            padding: 5px;
+        }
+        
+        body.light-mode .form-toggle {
+            background: #e2e8f0;
+        }
+        
+        .toggle-btn {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #cbd5e1;
+        }
+        
+        body.light-mode .toggle-btn {
+            color: #475569;
+        }
+        
+        .toggle-btn.active {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+        
+        body.light-mode .toggle-btn.active {
+            background: #1e40af;
+            color: #ffffff;
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        
+        body.light-mode .form-group label {
+            color: #475569;
+        }
+        
+        /* INPUT FIELDS - NO ICONS */
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon input, .input-with-icon select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            font-size: 16px;
+            background: #1e293b;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        body.light-mode .input-with-icon input, 
+        body.light-mode .input-with-icon select {
+            border: 2px solid #cbd5e1;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        
+        .input-with-icon input:focus, .input-with-icon select:focus {
+            border-color: #3b82f6;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+        
+        body.light-mode .input-with-icon input:focus, 
+        body.light-mode .input-with-icon select:focus {
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
+        }
+        
+        .input-with-icon.error input {
+            border-color: #dc2626;
+        }
+        
+        .error-message {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        /* Password Strength Indicator */
+        .password-strength-container {
+            margin-top: 10px;
+        }
+        
+        .strength-meter {
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        
+        body.light-mode .strength-meter {
+            background: #cbd5e1;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .strength-fill.weak {
+            background: #dc2626;
+            width: 25%;
+        }
+        
+        .strength-fill.fair {
+            background: #f59e0b;
+            width: 50%;
+        }
+        
+        .strength-fill.good {
+            background: #3b82f6;
+            width: 75%;
+        }
+        
+        .strength-fill.strong {
+            background: #059669;
+            width: 100%;
+        }
+        
+        .strength-text {
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .strength-label {
+            color: #94a3b8;
+        }
+        
+        body.light-mode .strength-label {
+            color: #64748b;
+        }
+        
+        .strength-value {
+            font-weight: 600;
+        }
+        
+        .strength-requirements {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        
+        body.light-mode .strength-requirements {
+            color: #64748b;
+        }
+        
+        .requirement {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .requirement span {
+            margin-left: 6px;
+        }
+        
+        .requirement.valid {
+            color: #059669;
+        }
+        
+        .requirement.invalid {
+            color: #94a3b8;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px;
+            background: #3b82f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        body.light-mode .btn {
+            background: #1e40af;
+            color: #ffffff;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        body.light-mode .btn:hover {
+            background: #1e3a8a;
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            background: #64748b;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .terms {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #cbd5e1;
+        }
+        
+        body.light-mode .terms {
+            color: #475569;
+        }
+        
+        .terms input {
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        
+        .terms a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        body.light-mode .terms a {
+            color: #1e40af;
+        }
+        
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .forgot-password a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        body.light-mode .forgot-password a {
+            color: #1e40af;
+        }
+        
+        /* Clear Cache Link - Hidden on auth screens */
+        .clear-cache-link {
+            text-align: center;
+            margin-top: 10px;
+            display: none; /* Hidden on auth screens */
+        }
+        
+        .clear-cache-link a {
+            color: #f59e0b;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        /* Main App Styles */
+        .app-container {
+            display: none;
+            max-width: 100%;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        
+        /* Enhanced Header for Mobile */
+        .header {
+            background: linear-gradient(135deg, var(--darker) 0%, var(--card-bg) 100%);
+            padding: 15px;
+            text-align: center;
+            border-bottom: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .header-content {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .header h1 {
+            color: var(--primary);
+            font-size: 20px;
+            margin-bottom: 8px;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Staff info visibility */
+        .staff-info {
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            align-items: flex-start;
+        }
+        
+        .staff-info span {
+            display: block;
+            line-height: 1.3;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+        }
+        
+        /* Ensure visibility in dark mode */
+        body:not(.light-mode) .staff-info span {
+            color: #ffffff !important;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        /* Ensure visibility in light mode */
+        body.light-mode .staff-info span {
+            color: #1e293b !important;
+            text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .theme-toggle, .settings-toggle, .new-department-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-secondary);
+            font-size: 16px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+        }
+        
+        .theme-toggle:hover, .settings-toggle:hover, .new-department-toggle:hover {
+            color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        /* Enhanced Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--card-border);
+            display: flex;
+            padding: 8px 5px;
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 5px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 10px;
+            min-height: 50px;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .nav-item i {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item .nav-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            padding: 15px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Improved Scanner Section for Mobile */
+        .scanner-section {
+            text-align: center;
+        }
+        
+        .scanner-box {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid var(--card-border);
+            box-shadow: var(--shadow);
+        }
+        
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+            height: 280px;
+            margin: 0 auto 15px;
+            border: 3px solid var(--card-border);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #000;
+            transition: all 0.3s ease;
+        }
+        
+        .camera-container.camera-active {
+            border-color: var(--primary);
+        }
+        
+        .camera-container.camera-dark {
+            border-color: var(--card-border);
+        }
+        
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        .scan-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 3px;
+            background: var(--primary);
+            animation: scan 2s infinite;
+            box-shadow: 0 0 10px var(--primary);
+        }
+        
+        @keyframes scan {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+        
+        /* Dark Camera Overlay */
+        .camera-dark-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            z-index: 5;
+            border-radius: 10px;
+        }
+        
+        .dark-camera-content {
+            max-width: 80%;
+        }
+        
+        .dark-camera-content i {
+            font-size: 48px;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .dark-camera-content h3 {
+            margin-bottom: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .dark-camera-content p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .scanner-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+        }
+        
+        .btn-warning {
+            background: var(--warning);
+        }
+        
+        .btn-small {
+            padding: 10px 12px;
+            font-size: 13px;
+            width: auto;
+            margin: 2px;
+        }
+        
+        /* Trial Info Banner - UPDATED TO BLUE FOR NSPM */
+        .trial-banner {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #2563eb 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            margin: 12px 15px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-left: 2.5px solid rgba(255, 255, 255, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .trial-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .trial-banner.expired {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+        }
+        
+        .banner-content {
+            width: 100%;
+        }
+        
+        .banner-content h3 {
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .banner-content p {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        /* Day Counter Badges - ALL 7 DAYS IN STRAIGHT LINE */
+        .trial-day-counters {
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            margin: 10px 0;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+        
+        .day-counter {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffffff;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .day-counter.active {
+            background: white;
+            color: #1e40af;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .day-counter.passed {
+            background: rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+        }
+        
+        .day-counter.expired {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        
+        .trial-progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .trial-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #2563eb 100%);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .trial-progress-bar.expired {
+            background: linear-gradient(90deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+        }
+        
+        /* History Header */
+        .history-header {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .history-title-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .history-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--darker);
+            color: var(--text-primary);
+            border: 1px solid var(--card-border);
+            font-size: 13px;
+        }
+        
+        /* Enhanced Summary Table for Mobile */
+        .summary-section {
+            margin-bottom: 20px;
+        }
+        
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            font-size: 13px;
+        }
+        
+        .summary-table th, .summary-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--card-border);
+            border-right: 1px solid var(--card-border);
+        }
+        
+        .summary-table th:last-child, .summary-table td:last-child {
+            border-right: none;
+        }
+        
+        .summary-table th {
+            background: var(--darker);
+            color: var(--text-primary);
+            font-weight: bold;
+        }
+        
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .summary-table tr:hover {
+            background: rgba(30, 64, 175, 0.05);
+        }
+        
+        /* Enhanced Tabular Attendance History for Mobile */
+        .attendance-table-container {
+            margin-top: 15px;
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg);
+            font-size: 12px;
+            min-width: 500px;
+        }
+        
+        .attendance-table th {
+            background: var(--darker);
+            color: var(--text-primary);
+            font-weight: bold;
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 2px solid var(--card-border);
+            border-right: 1px solid var(--card-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .attendance-table th:last-child {
+            border-right: none;
+        }
+        
+        .attendance-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--card-border);
+            border-right: 1px solid var(--card-border);
+            color: var(--text-secondary);
+        }
+        
+        .attendance-table td:last-child {
+            border-right: none;
+        }
+        
+        .attendance-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .attendance-table tr:hover {
+            background: rgba(30, 64, 175, 0.05);
+        }
+        
+        .status-present {
+            color: var(--success);
+            font-weight: bold;
+        }
+        
+        .status-absent {
+            color: var(--danger);
+            font-weight: bold;
+        }
+        
+        .action-cell {
+            text-align: center;
+        }
+        
+        .delete-record-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 8px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s;
+        }
+        
+        .delete-record-btn:hover {
+            background: #b91c1c;
+            transform: scale(1.05);
+        }
+        
+        /* Enhanced Subscription Section for Mobile - UPDATED TO ₦500 */
+        .subscription-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 2px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+        
+        .subscription-info {
+            margin: 12px 0;
+        }
+        
+        .subscription-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--card-border);
+            font-size: 14px;
+        }
+        
+        .payment-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 15px 0;
+        }
+        
+        .payment-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .payment-option:hover {
+            background: rgba(30, 64, 175, 0.1);
+            border-color: var(--primary);
+        }
+        
+        .payment-option.free-trial {
+            border-left: 4px solid #059669;
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(4, 120, 87, 0.05) 100%);
+        }
+        
+        .payment-option.free-trial .payment-icon {
+            color: #059669;
+        }
+        
+        .payment-option.free-trial:hover {
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.15) 0%, rgba(4, 120, 87, 0.1) 100%);
+            border-color: #059669;
+            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+        }
+        
+        .payment-icon {
+            margin-right: 12px;
+            font-size: 20px;
+            color: var(--primary);
+        }
+        
+        /* Enhanced Settings Section for Mobile */
+        .settings-section {
+            text-align: left;
+        }
+        
+        .settings-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: var(--shadow);
+        }
+        
+        .settings-group {
+            margin-bottom: 20px;
+        }
+        
+        .settings-group h3 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        .language-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .language-option {
+            padding: 12px;
+            background: var(--darker);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-size: 14px;
+        }
+        
+        .language-option.active {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .language-option:hover {
+            background: var(--secondary);
+            color: white;
+        }
+        
+        /* Enhanced Results Modal for Mobile */
+        .result-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+        
+        .result-content {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid var(--primary);
+            max-width: 350px;
+            width: 100%;
+            box-shadow: var(--shadow);
+        }
+        
+        .result-success {
+            border-color: var(--success);
+        }
+        
+        .result-error {
+            border-color: var(--danger);
+        }
+        
+        .result-icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+        }
+        
+        /* Enhanced Camera Permission for Mobile */
+        .camera-permission {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            padding: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .camera-permission i {
+            font-size: 42px;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+        
+        .enable-camera-text {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 12px 0;
+            line-height: 1.2;
+            text-align: center;
+        }
+        
+        .enable-camera-text span {
+            display: block;
+            color: var(--text-primary);
+        }
+        
+        .camera-instruction {
+            font-size: 13px;
+            margin: 8px 0 15px;
+            color: var(--text-secondary);
+        }
+        
+        /* Payment Form Styles */
+        .payment-form {
+            margin-top: 15px;
+        }
+        
+        /* Card Type Icons */
+        .card-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .card-input-container input {
+            padding-right: 50px !important;
+        }
+        
+        .card-type-indicator {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 24px;
+            display: none;
+        }
+        
+        .card-type-indicator.visible {
+            display: block;
+        }
+        
+        .card-type-indicator.visa {
+            color: #1a1f71;
+        }
+        
+        .card-type-indicator.mastercard {
+            color: #eb001b;
+        }
+        
+        .card-type-indicator.verve {
+            color: #7c19b0;
+        }
+        
+        .card-type-indicator.amex {
+            color: #2e77bc;
+        }
+        
+        .card-type-indicator.discover {
+            color: #ff6000;
+        }
+        
+        .card-type-indicator.unknown {
+            color: var(--text-secondary);
+        }
+        
+        .card-element {
+            padding: 12px;
+            border: 2px solid var(--card-border);
+            border-radius: 10px;
+            background: var(--darker);
+            margin-bottom: 15px;
+        }
+        
+        .card-errors {
+            color: var(--danger);
+            font-size: 13px;
+            margin-bottom: 10px;
+            min-height: 20px;
+        }
+        
+        /* Paystack Button - UPDATED TO ₦500 */
+        .paystack-button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .paystack-button:hover {
+            background: #1e3a8a;
+            transform: translateY(-2px);
+        }
+        
+        /* New Department Modal */
+        .new-department-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 15px;
+        }
+        
+        .new-department-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid var(--primary);
+            max-width: 400px;
+            width: 100%;
+            box-shadow: var(--shadow);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--card-border);
+            border-radius: 10px;
+            background: var(--darker);
+            color: var(--text-primary);
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        
+        .form-actions .btn {
+            flex: 1;
+            margin: 0;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #334155;
+            border-top: 5px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Office Icon Styles */
+        .office-icon {
+            font-size: 1.2em;
+            color: inherit;
+        }
+
+        .office-icon.header-icon {
+            font-size: 1.5em;
+        }
+
+        .office-icon.small {
+            font-size: 0.9em;
+        }
+
+        .office-icon.large {
+            font-size: 2em;
+        }
+
+        .office-icon.primary {
+            color: var(--primary);
+        }
+
+        .office-icon.secondary {
+            color: var(--secondary);
+        }
+
+        /* Logout Button in Settings */
+        .logout-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid var(--card-border);
+        }
+
+        .logout-btn-settings {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .logout-btn-settings:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+
+        /* Scanner disabled overlay */
+        .scanner-disabled {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            z-index: 10;
+            border-radius: 10px;
+        }
+
+        .scanner-disabled i {
+            font-size: 42px;
+            color: var(--warning);
+            margin-bottom: 15px;
+        }
+
+        .scanner-disabled h3 {
+            margin-bottom: 10px;
+            color: var(--warning);
+        }
+
+        .scanner-disabled p {
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 480px) {
+            .header h1 { font-size: 18px; }
+            .camera-container { height: 250px; max-width: 100%; }
+            .history-filters { flex-direction: column; }
+            .filter-select { min-width: 100%; }
+            .auth-header h1 { font-size: 24px; }
+            .auth-body { padding: 20px 15px; }
+            .staff-info { font-size: 11px; }
+            .day-counter { 
+                width: 30px; 
+                height: 30px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Authentication Section -->
+    <div id="authSection" class="auth-container">
+        <div class="auth-box">
+            <div class="auth-header">
+                <h1><i class="fas fa-building office-icon"></i> <span data-i18n="nsmpAttendance">NSPM SmartAttendance</span></h1>
+                <p id="authSubtitle" data-i18n="staffAttendancePortal">Staff Attendance Portal</p>
+            </div>
+            
+            <div class="auth-body">
+                <!-- Staff Badge -->
+                <div class="staff-badge">
+                    <i class="fas fa-id-badge"></i>
+                    <span id="staffPortalText" data-i18n="staffPortal">Staff Portal</span>
+                </div>
+                
+                <div class="form-toggle">
+                    <button class="toggle-btn active" id="loginToggle" data-i18n="login">Login</button>
+                    <button class="toggle-btn" id="signupToggle" data-i18n="signup">Sign Up</button>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="loginForm" class="auth-form active">
+                    <div class="form-group">
+                        <label for="loginId" data-i18n="staffId">Staff ID</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="loginId" placeholder="Enter your staff ID" required data-i18n-placeholder="enterStaffId">
+                        </div>
+                        <div class="error-message" id="loginIdError" data-i18n="validStaffIdRequired">Please enter a valid staff ID</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword" data-i18n="password">Password</label>
+                        <div class="input-with-icon">
+                            <input type="password" id="loginPassword" placeholder="Enter your password" required data-i18n-placeholder="enterPassword">
+                        </div>
+                        <div class="error-message" id="loginPasswordError" data-i18n="passwordRequired">Please enter your password</div>
+                    </div>
+                    
+                    <div class="terms">
+                        <input type="checkbox" id="rememberMe">
+                        <label for="rememberMe" data-i18n="rememberMe">Remember me</label>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="loginButton">
+                        <i class="fas fa-id-card office-icon small"></i> <span data-i18n="loginToPortal">Login to Staff Portal</span>
+                    </button>
+
+                    <div class="forgot-password">
+                        <a href="#" id="forgotPasswordLink" data-i18n="forgotPassword">Forgot your password?</a>
+                    </div>
+                    
+                    <!-- Clear Cache Link - Hidden on auth screens -->
+                    <div class="clear-cache-link" id="clearCacheLinkContainer">
+                        <a href="#" id="clearCacheLink">Clear cache and reset login</a>
+                    </div>
+                </form>
+                
+                <!-- Signup Form -->
+                <form id="signupForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="fullName" data-i18n="fullName">Full Name</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="fullName" placeholder="Enter your full name" required data-i18n-placeholder="enterFullName">
+                        </div>
+                        <div class="error-message" id="fullNameError" data-i18n="fullNameRequired">Please enter your full name</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email" data-i18n="staffEmail">Staff Email</label>
+                        <div class="input-with-icon">
+                            <input type="email" id="email" placeholder="Enter your staff email" required data-i18n-placeholder="enterStaffEmail">
+                        </div>
+                        <div class="error-message" id="emailError" data-i18n="validEmailRequired">Please enter a valid staff email</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="userId" data-i18n="staffId">Staff ID</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="userId" placeholder="e.g., NSPM/IT/001 (with slashes)" required data-i18n-placeholder="enterStaffId">
+                        </div>
+                        <div class="error-message" id="userIdError" data-i18n="validStaffIdRequired">Please enter a valid staff ID with slashes</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="department" data-i18n="department">Department</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="department" placeholder="Enter your department" required data-i18n-placeholder="enterDepartment">
+                        </div>
+                        <div class="error-message" id="departmentError" data-i18n="departmentRequired">Please enter your department</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="position" data-i18n="position">Position / Role</label>
+                        <div class="input-with-icon">
+                            <input type="text" id="position" placeholder="Enter your position or role" required data-i18n-placeholder="enterPosition">
+                        </div>
+                        <div class="error-message" id="positionError" data-i18n="positionRequired">Please enter your position or role</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupPassword" data-i18n="password">Password</label>
+                        <div class="input-with-icon">
+                            <input type="password" id="signupPassword" placeholder="Create a strong password" required data-i18n-placeholder="createPassword">
+                        </div>
+                        
+                        <!-- Password Strength Indicator -->
+                        <div class="password-strength-container">
+                            <div class="strength-meter">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <div class="strength-text">
+                                <span class="strength-label" id="strengthLabel" data-i18n="passwordStrength">Password strength</span>
+                                <span class="strength-value" id="strengthValue"></span>
+                            </div>
+                            <div class="strength-requirements">
+                                <div class="requirement invalid" id="reqLength">
+                                    <span data-i18n="min8Chars">✓ At least 8 characters</span>
+                                </div>
+                                <div class="requirement invalid" id="reqUppercase">
+                                    <span data-i18n="uppercaseLetter">✓ Uppercase letter</span>
+                                </div>
+                                <div class="requirement invalid" id="reqLowercase">
+                                    <span data-i18n="lowercaseLetter">✓ Lowercase letter</span>
+                                </div>
+                                <div class="requirement invalid" id="reqNumber">
+                                    <span data-i18n="numberRequired">✓ Number</span>
+                                </div>
+                                <div class="requirement invalid" id="reqSymbol">
+                                    <span data-i18n="symbolRequired">✓ Symbol</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="error-message" id="signupPasswordError" data-i18n="passwordRequirements">Password must meet all requirements</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword" data-i18n="confirmPassword">Confirm Password</label>
+                        <div class="input-with-icon">
+                            <input type="password" id="confirmPassword" placeholder="Confirm your password" required data-i18n-placeholder="confirmPassword">
+                        </div>
+                        <div class="error-message" id="confirmPasswordError" data-i18n="passwordsDontMatch">Passwords do not match</div>
+                    </div>
+                    
+                    <div class="terms">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <label for="agreeTerms" data-i18n="agreeTerms">I agree to the <a href="#" data-i18n="termsOfService">Terms of Service</a> and <a href="#" data-i18n="privacyPolicy">Privacy Policy</a></label>
+                    </div>
+                    <div class="error-message" id="termsError" data-i18n="agreeToTerms">You must agree to the terms and conditions</div>
+                    
+                    <button type="submit" class="btn" id="signupButton">
+                        <i class="fas fa-user-plus office-icon small"></i> <span data-i18n="createAccount">Create Staff Account</span>
+                    </button>
+                </form>
+
+                <!-- Forgot Password Form -->
+                <form id="forgotPasswordForm" class="auth-form">
+                    <div class="form-group">
+                        <label for="forgotEmail" data-i18n="staffEmail">Staff Email</label>
+                        <div class="input-with-icon">
+                            <input type="email" id="forgotEmail" placeholder="Enter your staff email" required data-i18n-placeholder="enterStaffEmail">
+                        </div>
+                        <div class="error-message" id="forgotEmailError" data-i18n="validEmailRequired">Please enter a valid staff email</div>
+                    </div>
+                    
+                    <button type="submit" class="btn" id="resetPasswordButton">
+                        <i class="fas fa-key office-icon small"></i> <span data-i18n="sendResetInstructions">Send Reset Instructions</span>
+                    </button>
+
+                    <div class="forgot-password">
+                        <a href="#" id="backToLoginLink" data-i18n="backToLogin">Back to Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="app-container" id="mainApp">
+        <!-- Enhanced Header for Mobile -->
+        <div class="header">
+            <div class="header-content">
+                <h1 id="headerTitle"><i class="fas fa-building office-icon header-icon"></i> <span data-i18n="nsmpAttendance">NSPM Attendance</span></h1>
+                <!-- Staff info -->
+                <div class="staff-info">
+                    <span id="staffName">John Doe</span>
+                    <span id="staffId">NSPM/IT/001</span>
+                    <span id="staffDepartment">Information Technology</span>
+                    <span id="staffPosition">IT Manager</span>
+                </div>
+            </div>
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="new-department-toggle" onclick="showNewDepartmentModal()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Trial Info Banner - WITH 7-DAY COUNTDOWN IN STRAIGHT LINE -->
+        <div id="trialBanner" class="trial-banner" style="display: none;">
+            <div class="banner-content">
+                <h3><i class="fas fa-building office-icon"></i> <span id="trialTitle">Free Trial Active</span></h3>
+                <p><span id="trialMessage">You have</span> <span id="trialDaysLeft">7</span> <span id="trialDaysText">days left in your free trial</span></p>
+                
+                <!-- Day Counters - 7 DAYS IN STRAIGHT LINE -->
+                <div class="trial-day-counters" id="trialDayCounters">
+                    <!-- Day counters will be dynamically generated -->
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="trial-progress">
+                    <div id="trialProgressBar" class="trial-progress-bar" style="width: 50%"></div>
+                </div>
+            </div>
+            <button class="btn btn-small" onclick="switchTab('premium')" style="margin-top: 10px;">
+                <i class="fas fa-building office-icon small"></i> <span id="subscribeButtonText">Subscribe Now</span>
+            </button>
+        </div>
+        
+        <!-- Scanner Tab -->
+        <div id="scanner" class="tab-content active">
+            <div class="scanner-section">
+                <h2><i class="fas fa-qrcode"></i> <span data-i18n="scanQRCode">Scan QR Code</span></h2>
+                <p style="color: var(--text-secondary); margin: 8px 0 12px;" id="scannerDescription">Point your camera at the checkpoint QR code</p>
+                
+                <div class="scanner-box">
+                    <div class="camera-container camera-dark">
+                        <!-- Dark overlay when camera is not ready -->
+                        <div id="cameraDarkOverlay" class="camera-dark-overlay" style="display: flex;">
+                            <div class="dark-camera-content">
+                                <i class="fas fa-video-slash"></i>
+                                <h3>Camera Not Ready</h3>
+                                <p>Enable camera to start scanning QR codes</p>
+                            </div>
+                        </div>
+                        
+                        <video id="video" playsinline autoplay style="display: none;"></video>
+                        <div class="scan-overlay">
+                            <div class="scan-line"></div>
+                        </div>
+                        
+                        <!-- Scanner disabled overlay -->
+                        <div id="scannerDisabled" class="scanner-disabled" style="display: none;">
+                            <i class="fas fa-lock"></i>
+                            <h3 id="scannerDisabledTitle">Scanner Locked</h3>
+                            <p id="scannerDisabledMessage">Your free trial has ended. Subscribe to unlock the QR scanner.</p>
+                            <button class="btn btn-warning" onclick="switchTab('premium')">
+                                <i class="fas fa-building office-icon small"></i> Subscribe Now
+                            </button>
+                        </div>
+                        <div id="cameraPermission" class="camera-permission" style="display: none;">
+                            <i class="fas fa-camera"></i>
+                            <div class="enable-camera-text">
+                                <span data-i18n="enable">Enable</span>
+                                <span data-i18n="camera">Camera</span>
+                            </div>
+                            <p class="camera-instruction" data-i18n="cameraAccessRequired">Camera access is required to scan QR codes</p>
+                            <button class="btn" onclick="startScanner()" style="margin-top: 15px;">
+                                <i class="fas fa-camera office-icon small"></i> <span data-i18n="enableCamera">Enable Camera</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="scanner-controls">
+                        <button class="btn" onclick="startScanner()" id="startBtn">
+                            <i class="fas fa-qrcode office-icon small"></i> <span data-i18n="startScanner">Start Scanner</span>
+                        </button>
+                        <button class="btn btn-danger" onclick="stopScanner()" id="stopBtn" style="display: none;">
+                            <i class="fas fa-stop office-icon small"></i> <span data-i18n="stopScanner">Stop Scanner</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="color: var(--text-secondary); font-size: 11px; margin-top: 15px;" data-i18n="holdSteadyForScan">
+                    Hold steady for 2 seconds for best results
+                </div>
+            </div>
+        </div>
+        
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <div class="history-header">
+                <div class="history-title-section">
+                    <h2><i class="fas fa-history"></i> <span data-i18n="attendanceHistory">Attendance History</span></h2>
+                </div>
+                <p style="color: var(--text-secondary); font-size: 13px;" data-i18n="completeAttendanceRecords">Your complete attendance records</p>
+                
+                <!-- Department Filter -->
+                <div class="history-filters">
+                    <select id="departmentFilter" class="filter-select" onchange="filterAttendanceHistory()">
+                        <option value="" data-i18n="allDepartments">All Departments</option>
+                        <!-- Department options will be loaded here -->
+                    </select>
+                    <select id="statusFilter" class="filter-select" onchange="filterAttendanceHistory()">
+                        <option value="" data-i18n="allStatus">All Status</option>
+                        <option value="present" data-i18n="present">Present</option>
+                        <option value="absent" data-i18n="absent">Absent</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Summary Table -->
+            <div class="summary-section">
+                <h3><i class="fas fa-chart-bar"></i> <span data-i18n="attendanceSummary">Attendance Summary</span></h3>
+                <table class="summary-table">
+                    <thead>
+                        <tr>
+                            <th data-i18n="locationCode">Location Code</th>
+                            <th data-i18n="locationName">Location Name</th>
+                            <th data-i18n="attended">Attended</th>
+                            <th data-i18n="total">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody">
+                        <!-- Summary rows will be generated here -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Enhanced Tabular Attendance History for Mobile -->
+            <div class="attendance-table-container">
+                <table class="attendance-table" id="attendanceTable">
+                    <thead>
+                        <tr>
+                            <th data-i18n="locationCode">Location Code</th>
+                            <th data-i18n="locationName">Location Name</th>
+                            <th data-i18n="date">Date</th>
+                            <th data-i18n="time">Time</th>
+                            <th data-i18n="checkpoint">Checkpoint</th>
+                            <th data-i18n="status">Status</th>
+                            <th class="action-cell" data-i18n="action">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                        <!-- Attendance records will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Premium Tab - UPDATED TO ₦500 -->
+        <div id="premium" class="tab-content">
+            <h2><i class="fas fa-crown"></i> <span data-i18n="monthlySubscription">Monthly Subscription</span></h2>
+            <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 13px;" data-i18n="unlockFullFeatures">Unlock full features with our affordable subscription</p>
+            
+            <div class="subscription-card">
+                <h3><i class="fas fa-id-card office-icon"></i> <span data-i18n="currentPlan">Current Plan</span></h3>
+                
+                <div class="subscription-info">
+                    <div class="subscription-row">
+                        <span data-i18n="plan">Plan:</span>
+                        <span><strong data-i18n="staffAccess">Staff Access</strong></span>
+                    </div>
+                    <div class="subscription-row">
+                        <span data-i18n="price">Price:</span>
+                        <span><strong>₦500 / <span data-i18n="month">month</span></strong></span>
+                    </div>
+                    <div class="subscription-row">
+                        <span data-i18n="status">Status:</span>
+                        <span id="subscriptionStatus" style="color: var(--primary);"><strong id="statusValue">Active (Trial - 7 days left)</strong></span>
+                    </div>
+                    <div class="subscription-row">
+                        <span data-i18n="expires">Expires:</span>
+                        <span id="subscriptionExpiry"><strong id="expiresValue">10/24/2025</strong></span>
+                    </div>
+                </div>
+                
+                <h4 style="margin-top: 15px;" data-i18n="paymentMethods">Payment Methods</h4>
+                <div class="payment-options">
+                    <!-- Only Paystack payment option -->
+                    <div class="payment-option" onclick="showPaymentForm('paystack')">
+                        <div class="payment-icon"><i class="fas fa-university"></i></div>
+                        <div>
+                            <div><strong data-i18n="payWithPaystack">Pay with Paystack</strong></div>
+                            <div style="font-size: 11px; color: var(--text-secondary);" data-i18n="paystackMethods">Secure Paystack payment (Cards, Bank Transfer, USSD)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 15px; font-size: 11px; color: var(--text-secondary);" data-i18n="securePayment">
+                    Secure Payment Powered by Paystack
+                </div>
+            </div>
+        </div>
+        
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="settings-section">
+                <h2><i class="fas fa-cog"></i> <span data-i18n="settings">Settings</span></h2>
+                <p style="color: var(--text-secondary); margin-bottom: 15px; font-size: 13px;" data-i18n="customizeExperience">Customize your app experience</p>
+                
+                <div class="settings-card">
+                    <div class="settings-group">
+                        <h3 data-i18n="language">Language</h3>
+                        <div class="language-options">
+                            <div class="language-option active" data-lang="en">
+                                English
+                            </div>
+                            <div class="language-option" data-lang="es">
+                                Español
+                            </div>
+                            <div class="language-option" data-lang="fr">
+                                Français
+                            </div>
+                            <div class="language-option" data-lang="ar">
+                                العربية
+                            </div>
+                            <div class="language-option" data-lang="zh">
+                                中文
+                            </div>
+                            <div class="language-option" data-lang="hi">
+                                हिन्दी
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Logout Section -->
+                    <div class="logout-section">
+                        <h3 data-i18n="account">Account</h3>
+                        <button class="logout-btn-settings" onclick="logout()">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span data-i18n="logout">Logout</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav" style="display: none;">
+        <button class="nav-item active" onclick="switchTab('scanner')">
+            <i class="fas fa-qrcode"></i>
+            <span class="nav-label" data-i18n="scan">Scan</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('history')">
+            <i class="fas fa-history"></i>
+            <span class="nav-label" data-i18n="history">History</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('premium')">
+            <i class="fas fa-crown"></i>
+            <span class="nav-label" data-i18n="premium">Premium</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('settings')">
+            <i class="fas fa-cog"></i>
+            <span class="nav-label" data-i18n="settings">Settings</span>
+        </button>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Processing...</p>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="result-modal" id="resultModal" style="display: none;">
+        <div class="result-content" id="resultContent">
+            <div class="result-icon" id="resultIcon"></div>
+            <h3 id="resultTitle">Success</h3>
+            <p id="resultMessage" style="margin: 15px 0;"></p>
+            <button class="btn" onclick="closeResult()">
+                <span data-i18n="continue">Continue</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- New Department Modal -->
+    <div class="new-department-modal" id="newDepartmentModal" style="display: none;">
+        <div class="new-department-content">
+            <h2><i class="fas fa-building office-icon"></i> <span data-i18n="addCheckpoint">Add Checkpoint</span></h2>
+            <p style="color: var(--text-secondary); margin: 8px 0 15px; font-size: 13px;" data-i18n="addCheckpointDescription">Add a checkpoint location for attendance</p>
+            
+            <div class="form-group">
+                <label for="locationCode" data-i18n="locationCode">Location Code</label>
+                <input type="text" id="locationCode" placeholder="e.g., NSPM/IT/MAIN" data-i18n-placeholder="locationCodePlaceholder">
+            </div>
+            
+            <div class="form-group">
+                <label for="locationName" data-i18n="locationName">Location Name</label>
+                <input type="text" id="locationName" placeholder="e.g., IT Department Main Office" data-i18n-placeholder="locationNamePlaceholder">
+            </div>
+            
+            <div class="form-group">
+                <label for="locationFloor" data-i18n="floor">Floor</label>
+                <input type="text" id="locationFloor" placeholder="e.g., 3rd Floor" data-i18n-placeholder="floorPlaceholder">
+            </div>
+            
+            <div class="form-group">
+                <label for="locationType" data-i18n="locationType">Location Type</label>
+                <select id="locationType">
+                    <option value="office" data-i18n="office">Office</option>
+                    <option value="production" data-i18n="production">Production Area</option>
+                    <option value="security" data-i18n="security">Security Checkpoint</option>
+                    <option value="admin" data-i18n="admin">Administration</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeNewDepartmentModal()">
+                    <span data-i18n="cancel">Cancel</span>
+                </button>
+                <button class="btn" onclick="addNewDepartment()">
+                    <i class="fas fa-building office-icon small"></i> <span data-i18n="addCheckpoint">Add Checkpoint</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal - UPDATED TO ₦500 -->
+    <div class="new-department-modal" id="paymentModal" style="display: none;">
+        <div class="new-department-content">
+            <h2><i class="fas fa-building office-icon"></i> <span data-i18n="completePayment">Complete Payment</span></h2>
+            <p style="color: var(--text-secondary); margin: 8px 0 15px; font-size: 13px;" data-i18n="completePaymentDescription">Complete your subscription payment</p>
+            
+            <!-- Only Paystack Payment Form -->
+            <div id="paystackPaymentForm" class="payment-form">
+                <div class="form-group">
+                    <label for="paystackEmail" data-i18n="emailAddress">Email Address</label>
+                    <input type="email" id="paystackEmail" placeholder="your@email.com" data-i18n-placeholder="emailPlaceholder">
+                </div>
+                <div class="form-group">
+                    <label for="paystackPhone" data-i18n="phoneNumber">Phone Number (Optional)</label>
+                    <input type="tel" id="paystackPhone" placeholder="+2348012345678" data-i18n-placeholder="phonePlaceholder">
+                </div>
+                
+                <button class="paystack-button" onclick="processPaystackPayment()">
+                    <i class="fas fa-building office-icon small"></i> <span data-i18n="payWithPaystack">Pay ₦500 with Paystack</span>
+                </button>
+                <div style="text-align: center; margin-top: 10px; font-size: 11px; color: var(--text-secondary);" data-i18n="redirectToPaystack">
+                    You'll be redirected to Paystack for secure payment
+                </div>
+            </div>
+            
+            <!-- Amount Display - UPDATED TO ₦500 -->
+            <div class="subscription-info" style="margin: 20px 0;">
+                <div class="subscription-row">
+                    <span data-i18n="plan">Plan:</span>
+                    <span><strong data-i18n="staffAccess">Staff Access</strong></span>
+                </div>
+                <div class="subscription-row">
+                    <span data-i18n="duration">Duration:</span>
+                    <span><strong>1 <span data-i18n="month">Month</span></strong></span>
+                </div>
+                <div class="subscription-row">
+                    <span data-i18n="amount">Amount:</span>
+                    <span><strong>₦500 NGN (Fixed)</strong></span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closePaymentModal()">
+                    <span data-i18n="cancel">Cancel</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // LANGUAGE SUPPORT SYSTEM - UPDATED FOR NSPM STAFF
+        // =============================================
+        const translations = {
+            en: {
+                // Auth
+                "nsmpAttendance": "NSPM SmartAttendance",
+                "staffAttendancePortal": "Staff Attendance Portal",
+                "staffPortal": "Staff Portal",
+                "login": "Login",
+                "signup": "Sign Up",
+                "staffId": "Staff ID",
+                "enterStaffId": "Enter your staff ID",
+                "password": "Password",
+                "enterPassword": "Enter your password",
+                "rememberMe": "Remember me",
+                "loginToPortal": "Login to Staff Portal",
+                "forgotPassword": "Forgot your password?",
+                "fullName": "Full Name",
+                "enterFullName": "Enter your full name",
+                "staffEmail": "Staff Email",
+                "enterStaffEmail": "Enter your staff email",
+                "department": "Department",
+                "enterDepartment": "Enter your department",
+                "position": "Position / Role",
+                "enterPosition": "Enter your position or role",
+                "confirmPassword": "Confirm Password",
+                "createAccount": "Create Staff Account",
+                "sendResetInstructions": "Send Reset Instructions",
+                "backToLogin": "Back to Login",
+                
+                // Password strength
+                "passwordStrength": "Password strength",
+                "min8Chars": "✓ At least 8 characters",
+                "uppercaseLetter": "✓ Uppercase letter",
+                "lowercaseLetter": "✓ Lowercase letter",
+                "numberRequired": "✓ Number",
+                "symbolRequired": "✓ Symbol",
+                
+                // Terms
+                "agreeTerms": "I agree to the Terms of Service and Privacy Policy",
+                "termsOfService": "Terms of Service",
+                "privacyPolicy": "Privacy Policy",
+                
+                // Error messages
+                "validStaffIdRequired": "Please enter a valid staff ID",
+                "passwordRequired": "Please enter your password",
+                "fullNameRequired": "Please enter your full name",
+                "validEmailRequired": "Please enter a valid staff email",
+                "departmentRequired": "Please enter your department",
+                "positionRequired": "Please enter your position or role",
+                "passwordRequirements": "Password must meet all requirements",
+                "passwordsDontMatch": "Passwords do not match",
+                "agreeToTerms": "You must agree to the terms and conditions",
+                
+                // Main App
+                "scanQRCode": "Scan QR Code",
+                "pointCameraAtQR": "Point your camera at the checkpoint QR code",
+                "startScanner": "Start Scanner",
+                "enable": "Enable",
+                "camera": "Camera",
+                "cameraAccessRequired": "Camera access is required to scan QR codes",
+                "enableCamera": "Enable Camera",
+                "stopScanner": "Stop Scanner",
+                "holdSteadyForScan": "Hold steady for 2 seconds for best results",
+                
+                // History
+                "attendanceHistory": "Attendance History",
+                "completeAttendanceRecords": "Your complete attendance records",
+                "allDepartments": "All Departments",
+                "allStatus": "All Status",
+                "present": "Present",
+                "absent": "Absent",
+                "attendanceSummary": "Attendance Summary",
+                "locationCode": "Location Code",
+                "locationName": "Location Name",
+                "attended": "Attended",
+                "total": "Total",
+                "date": "Date",
+                "time": "Time",
+                "checkpoint": "Checkpoint",
+                "status": "Status",
+                "action": "Action",
+                
+                // Premium - UPDATED TO ₦500
+                "monthlySubscription": "Monthly Subscription",
+                "unlockFullFeatures": "Unlock full features with our affordable subscription",
+                "currentPlan": "Current Plan",
+                "plan": "Plan",
+                "staffAccess": "Staff Access",
+                "price": "Price",
+                "month": "month",
+                "status": "Status",
+                "expires": "Expires",
+                "paymentMethods": "Payment Methods",
+                "payWithPaystack": "Pay with Paystack",
+                "paystackMethods": "Secure Paystack payment (Cards, Bank Transfer, USSD)",
+                "securePayment": "Secure Payment Powered by Paystack",
+                
+                // Settings
+                "settings": "Settings",
+                "customizeExperience": "Customize your app experience",
+                "language": "Language",
+                "account": "Account",
+                "logout": "Logout",
+                
+                // Trial Banner
+                "freeTrialActive": "Free Trial Active",
+                "trialExpired": "Trial Expired",
+                "trialDaysLeft": "You have",
+                "daysLeft": "days left in your free trial",
+                "subscribeNow": "Subscribe Now",
+                
+                // Navigation
+                "scan": "Scan",
+                "history": "History",
+                "premium": "Premium",
+                
+                // New Checkpoint Modal
+                "addCheckpoint": "Add Checkpoint",
+                "addCheckpointDescription": "Add a checkpoint location for attendance",
+                "locationCodePlaceholder": "e.g., NSPM/IT/MAIN",
+                "locationNamePlaceholder": "e.g., IT Department Main Office",
+                "floorPlaceholder": "e.g., 3rd Floor",
+                "locationType": "Location Type",
+                "office": "Office",
+                "production": "Production Area",
+                "security": "Security Checkpoint",
+                "admin": "Administration",
+                "cancel": "Cancel",
+                
+                // Payment Modal - UPDATED TO ₦500
+                "completePayment": "Complete Payment",
+                "completePaymentDescription": "Complete your subscription payment",
+                "emailAddress": "Email Address",
+                "emailPlaceholder": "your@email.com",
+                "phoneNumber": "Phone Number (Optional)",
+                "phonePlaceholder": "+2348012345678",
+                "payWithPaystack": "Pay ₦500 with Paystack",
+                "redirectToPaystack": "You'll be redirected to Paystack for secure payment",
+                "duration": "Duration",
+                "amount": "Amount",
+                
+                // Result Modal
+                "continue": "Continue",
+                
+                // Additional translations
+                "validationError": "Validation Error",
+                "fillAllFields": "Please fill in all required fields correctly.",
+                "signingIn": "Signing in...",
+                "loginFailed": "Login Failed",
+                "invalidCredentials": "Invalid staff ID or password. Please try again.",
+                "creatingAccount": "Creating your staff account...",
+                "accountCreated": "Staff Account Created!",
+                "welcomeMessage": "Your staff account has been created successfully. Welcome to NSPM SmartAttendance!",
+                "registrationFailed": "Registration Failed",
+                "emailExists": "An account with this email already exists.",
+                "staffIdExists": "An account with this staff ID already exists.",
+                "registrationFailedGeneric": "Registration failed. Please try again.",
+                "emailExistsFirebase": "Email already registered in Firebase Authentication.",
+                "weakPassword": "Password is too weak. Please use a stronger password.",
+                "networkError": "Network error. Please check your connection and try again.",
+                "languageChanged": "Language Changed",
+                "languageSetTo": "App language has been set to",
+                "active": "Active",
+                "trial": "Trial",
+                "paid": "Paid",
+                "expired": "Expired",
+                "subscribeToContinue": "Please subscribe to continue using the scanner",
+                "subscriptionRequired": "Subscription Required",
+                "pleaseSubscribe": "Please Subscribe",
+                "missingInformation": "Missing Information",
+                "locationExists": "Location Exists",
+                "locationAlreadyRegistered": "This location code is already registered.",
+                "locationAdded": "Checkpoint Added!",
+                "floor": "Floor",
+                "noLocationsAdded": "No checkpoints added yet. Use the + button to add checkpoints.",
+                "noAttendanceRecords": "No attendance records found.",
+                "unknownLocation": "Unknown Location",
+                "deleteRecord": "Delete Record",
+                "delete": "Delete",
+                "confirmDeleteRecord": "Are you sure you want to delete this attendance record?",
+                "recordDeleted": "Record Deleted",
+                "recordDeletedSuccessfully": "Attendance record has been successfully deleted.",
+                "staffInfoNotFound": "Staff information not found",
+                "invalidQRCode": "Invalid QR code format. Please scan a valid attendance QR code.",
+                "invalidQRCodeMissingFields": "Invalid QR code: Missing required fields",
+                "locationNotRegistered": "Location Not Registered",
+                "notRegisteredFor": "You are not registered for",
+                "addCheckpointFirst": "Please add this checkpoint first.",
+                "attendanceAlreadyRecorded": "Attendance Already Recorded",
+                "alreadyRecordedAttendanceToday": "You have already recorded attendance for this location today.",
+                "alreadyRecordedAttendanceForCheckpoint": "You have already recorded attendance for this checkpoint.",
+                "attendanceRecorded": "Attendance Recorded!",
+                "location": "Location",
+                "staff": "Staff",
+                "scanFailed": "Scan Failed",
+                "unableToAccessCamera": "Unable to access camera.",
+                "allowCameraAccess": "Please allow camera access in your browser settings.",
+                "noCameraFound": "No camera found on your device.",
+                "cameraNotSupported": "Camera not supported on this device.",
+                "checkPermissionsAndTryAgain": "Please check permissions and try again.",
+                "cameraError": "Camera Error",
+                "enterEmailAddress": "Please enter your email address.",
+                "enterValidEmail": "Please enter a valid email address.",
+                "paymentConfiguration": "Payment Configuration",
+                "paystackNotConfigured": "Paystack payment is not configured. Please contact support.",
+                "paymentVerificationFailed": "Payment Verification Failed",
+                "couldNotVerifyPayment": "We could not verify your payment. Please contact support.",
+                "paymentError": "Payment Error",
+                "failedToInitializePayment": "Failed to initialize payment. Please try again.",
+                "paymentSuccessful": "Payment Successful!",
+                "thankYouForPayment": "Thank you for your ₦500 payment! Your subscription is now active.",
+                "subscriptionActiveUntil": "Your subscription is now active until",
+                "paymentId": "Payment ID",
+                "unknown": "Unknown",
+                "noLocationsRegistered": "No Checkpoints Registered",
+                "addCheckpointsBeforeScanning": "You need to add checkpoints before you can scan QR codes. Please add your checkpoints first.",
+                "subscribeToUseScanner": "Please subscribe to continue using the QR scanner feature.",
+                "confirmLogout": "Are you sure you want to logout?",
+                "clearCache": "Clear cache and reset login",
+                "cacheCleared": "Cache cleared successfully",
+                "passwordResetConfirmed": "Password reset confirmed",
+                "useNewPassword": "Please use your new password to login"
+            },
+            es: {
+                "nsmpAttendance": "NSPM Asistencia Inteligente",
+                "staffAttendancePortal": "Portal de Asistencia del Personal",
+                "staffPortal": "Portal del Personal",
+                "login": "Iniciar Sesión",
+                "signup": "Registrarse",
+                "staffId": "ID del Personal",
+                "enterStaffId": "Ingresa tu ID del personal",
+                "password": "Contraseña",
+                "enterPassword": "Ingresa tu contraseña",
+                "rememberMe": "Recordarme",
+                "loginToPortal": "Iniciar Sesión al Portal del Personal",
+                "forgotPassword": "¿Olvidaste tu contraseña?",
+                "fullName": "Nombre Completo",
+                "enterFullName": "Ingresa tu nombre completo",
+                "staffEmail": "Correo del Personal",
+                "enterStaffEmail": "Ingresa tu correo del personal",
+                "department": "Departamento",
+                "enterDepartment": "Ingresa tu departamento",
+                "position": "Cargo / Rol",
+                "enterPosition": "Ingresa tu cargo o rol",
+                "confirmPassword": "Confirmar Contraseña",
+                "createAccount": "Crear Cuenta del Personal",
+                "scanQRCode": "Escanear Código QR",
+                "pointCameraAtQR": "Apunta tu cámara al código QR del punto de control",
+                "attendanceHistory": "Historial de Asistencia",
+                "completeAttendanceRecords": "Tus registros completos de asistencia",
+                "allDepartments": "Todos los Departamentos",
+                "allStatus": "Todos los Estados",
+                "present": "Presente",
+                "absent": "Ausente",
+                "attendanceSummary": "Resumen de Asistencia",
+                "locationCode": "Código de Ubicación",
+                "locationName": "Nombre de Ubicación",
+                "attended": "Asistió",
+                "total": "Total",
+                "date": "Fecha",
+                "time": "Hora",
+                "checkpoint": "Punto de Control",
+                "status": "Estado",
+                "action": "Acción",
+                "monthlySubscription": "Suscripción Mensual",
+                "unlockFullFeatures": "Desbloquea todas las funciones con nuestra suscripción asequible",
+                "currentPlan": "Plan Actual",
+                "plan": "Plan",
+                "staffAccess": "Acceso del Personal",
+                "price": "Precio",
+                "month": "mes",
+                "status": "Estado",
+                "expires": "Caduca",
+                "paymentMethods": "Métodos de Pago",
+                "payWithPaystack": "Pagar con Paystack",
+                "paystackMethods": "Pago seguro con Paystack (Tarjetas, Transferencia Bancaria, USSD)",
+                "securePayment": "Pago Seguro con Paystack",
+                "settings": "Configuración",
+                "customizeExperience": "Personaliza tu experiencia en la aplicación",
+                "language": "Idioma",
+                "account": "Cuenta",
+                "logout": "Cerrar Sesión",
+                "freeTrialActive": "Prueba Gratuita Activa",
+                "trialDaysLeft": "Tienes",
+                "daysLeft": "días restantes en tu prueba gratuita",
+                "subscribeNow": "Suscríbete Ahora",
+                "scan": "Escanear",
+                "history": "Historial",
+                "premium": "Premium",
+                "addCheckpoint": "Agregar Punto de Control",
+                "addCheckpointDescription": "Agrega un punto de control para la asistencia",
+                "locationCodePlaceholder": "ej., NSPM/IT/MAIN",
+                "locationNamePlaceholder": "ej., Oficina Principal del Departamento de IT",
+                "floorPlaceholder": "ej., 3er Piso",
+                "locationType": "Tipo de Ubicación",
+                "office": "Oficina",
+                "production": "Área de Producción",
+                "security": "Punto de Control de Seguridad",
+                "admin": "Administración",
+                "cancel": "Cancelar",
+                "continue": "Continuar"
+            },
+            fr: {
+                "nsmpAttendance": "NSPM Présence Intelligente",
+                "staffAttendancePortal": "Portail de Présence du Personnel",
+                "staffPortal": "Portail du Personnel",
+                "login": "Connexion",
+                "signup": "S'inscrire",
+                "staffId": "ID du Personnel",
+                "enterStaffId": "Entrez votre ID du personnel",
+                "password": "Mot de passe",
+                "enterPassword": "Entrez votre mot de passe",
+                "rememberMe": "Se souvenir de moi",
+                "loginToPortal": "Se connecter au Portail du Personnel",
+                "forgotPassword": "Mot de passe oublié?",
+                "fullName": "Nom Complet",
+                "enterFullName": "Entrez votre nom complet",
+                "staffEmail": "Email du Personnel",
+                "enterStaffEmail": "Entrez votre email du personnel",
+                "department": "Département",
+                "enterDepartment": "Entrez votre département",
+                "position": "Poste / Rôle",
+                "enterPosition": "Entrez votre poste ou rôle",
+                "confirmPassword": "Confirmer le Mot de Passe",
+                "createAccount": "Créer un Compte du Personnel",
+                "scanQRCode": "Scanner le Code QR",
+                "pointCameraAtQR": "Pointez votre caméra vers le code QR du point de contrôle",
+                "attendanceHistory": "Historique de Présence",
+                "completeAttendanceRecords": "Vos registres de présence complets",
+                "allDepartments": "Tous les Départements",
+                "allStatus": "Tous les Statuts",
+                "present": "Présent",
+                "absent": "Absent",
+                "attendanceSummary": "Résumé de Présence",
+                "locationCode": "Code d'Emplacement",
+                "locationName": "Nom d'Emplacement",
+                "attended": "Assisté",
+                "total": "Total",
+                "date": "Date",
+                "time": "Heure",
+                "checkpoint": "Point de Contrôle",
+                "status": "Statut",
+                "action": "Action",
+                "monthlySubscription": "Abonnement Mensuel",
+                "unlockFullFeatures": "Débloquez toutes les fonctionnalités avec notre abonnement abordable",
+                "currentPlan": "Plan Actuel",
+                "plan": "Plan",
+                "staffAccess": "Accès du Personnel",
+                "price": "Prix",
+                "month": "mois",
+                "status": "Statut",
+                "expires": "Expire",
+                "paymentMethods": "Méthodes de Paiement",
+                "payWithPaystack": "Payer avec Paystack",
+                "paystackMethods": "Paiement sécurisé Paystack (Cartes, Virement Bancaire, USSD)",
+                "securePayment": "Paiement Sécurisé par Paystack",
+                "settings": "Paramètres",
+                "customizeExperience": "Personnalisez votre expérience d'application",
+                "language": "Langue",
+                "account": "Compte",
+                "logout": "Déconnexion",
+                "freeTrialActive": "Essai Gratuit Actif",
+                "trialDaysLeft": "Il vous reste",
+                "daysLeft": "jours dans votre essai gratuit",
+                "subscribeNow": "S'abonner Maintenant",
+                "scan": "Scanner",
+                "history": "Historique",
+                "premium": "Premium",
+                "addCheckpoint": "Ajouter un Point de Contrôle",
+                "addCheckpointDescription": "Ajoutez un point de contrôle pour la présence",
+                "locationCodePlaceholder": "ex., NSPM/IT/MAIN",
+                "locationNamePlaceholder": "ex., Bureau Principal du Département IT",
+                "floorPlaceholder": "ex., 3ème Étage",
+                "locationType": "Type d'Emplacement",
+                "office": "Bureau",
+                "production": "Zone de Production",
+                "security": "Point de Contrôle de Sécurité",
+                "admin": "Administration",
+                "cancel": "Annuler",
+                "continue": "Continuer"
+            }
+        };
+
+        // =============================================
+        // APPLICATION STATE - UPDATED FOR NSPM
+        // =============================================
+        
+        let currentUser = null;
+        let users = JSON.parse(localStorage.getItem('nsmpUsers')) || [];
+        
+        // Staff data for main app
+        let staffCheckpoints = [];
+        let attendanceRecords = [];
+        let videoStream = null;
+        let scanInterval = null;
+        let isScannerActive = false;
+        let currentLanguage = 'en';
+        
+        // DUPLICATE PROTECTION VARIABLES
+        let lastScannedCode = null;
+        let scanCooldown = false;
+
+        // Payment variables
+        let currentPaymentMethod = null;
+
+        const TRIAL_DAYS = 7;
+        const SUBSCRIPTION_PRICE = 500; // ₦500 Naira - REDUCED FROM ₦5000
+        const SUBSCRIPTION_DURATION = 1; // Month - CHANGED FROM 4 MONTHS
+
+        // Paystack configuration
+        const PAYSTACK_PUBLIC_KEY = 'pk_live_54247d3182c251b3d9509ef2bff79157e3061edb';
+        
+        // Track if payment success message has been shown
+        let paymentSuccessShown = false;
+
+        // =============================================
+        // SIMPLE PAYSTACK PAYMENT FUNCTION - UPDATED TO ₦500
+        // =============================================
+        async function processPaystackPayment() {
+            const email = document.getElementById('paystackEmail').value.trim();
+            
+            if (!email) {
+                showResult('error', 'Missing Information', 'Please enter your email address.');
+                return;
+            }
+            
+            // Validate email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showResult('error', 'Invalid Email', 'Please enter a valid email address.');
+                return;
+            }
+            
+            showLoading('Opening payment gateway...');
+            
+            try {
+                // Generate unique reference
+                const reference = 'NSPM-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                
+                // Store reference for verification
+                localStorage.setItem('pendingPaymentRef', reference);
+                
+                // Create Paystack payment handler - UPDATED TO ₦500 NGN
+                const handler = PaystackPop.setup({
+                    key: PAYSTACK_PUBLIC_KEY,
+                    email: email,
+                    amount: SUBSCRIPTION_PRICE * 100, // ₦500 in kobo (500 * 100 = 50,000 kobo)
+                    currency: 'NGN', // Nigerian Naira currency
+                    ref: reference,
+                    metadata: {
+                        staffId: currentUser?.userId || 'unknown',
+                        staffName: currentUser?.name || 'unknown',
+                        product: 'NSPM SmartAttendance Monthly Subscription',
+                        amountNGN: SUBSCRIPTION_PRICE
+                    },
+                    callback: function(response) {
+                        // Payment successful
+                        hideLoading();
+                        console.log('Payment successful:', response);
+                        
+                        // Verify payment
+                        verifyPayment(response.reference);
+                    },
+                    onClose: function() {
+                        hideLoading();
+                        console.log('Payment window closed.');
+                        showResult('info', 'Payment Cancelled', 'Payment was cancelled. You can try again.');
+                    }
+                });
+                
+                handler.openIframe();
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Payment error:', error);
+                showResult('error', 'Payment Error', 'Failed to process payment. Please try again.');
+            }
+        }
+
+        // Verify payment after success
+        async function verifyPayment(reference) {
+            showLoading('Verifying payment...');
+            
+            try {
+                // Simple verification - you can enhance this later
+                const paymentVerified = await simplePaymentVerification(reference);
+                
+                if (paymentVerified) {
+                    // Update user subscription to PAID
+                    if (currentUser) {
+                        // Calculate expiry date (1 month from now)
+                        const expiryDate = new Date();
+                        expiryDate.setMonth(expiryDate.getMonth() + 1);
+                        
+                        currentUser.subscription = {
+                            type: 'paid', // CHANGED FROM 'trial' to 'paid'
+                            status: 'active',
+                            expiry: expiryDate.toISOString(),
+                            lastPaymentDate: new Date().toISOString(),
+                            lastPaymentId: reference,
+                            lastPaymentMethod: 'paystack',
+                            paymentAmount: SUBSCRIPTION_PRICE,
+                            durationMonths: 1,
+                            // Remove trial-related properties
+                            startDate: null,
+                            trialDaysUsed: null,
+                            isNewUser: false,
+                            lastLoginDate: null,
+                            daysUsed: null
+                        };
+                        
+                        // Save to localStorage
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        
+                        // Clear pending reference
+                        localStorage.removeItem('pendingPaymentRef');
+                        
+                        // Update UI
+                        updateSubscriptionUI();
+                        updateTrialBanner(); // This will hide the trial banner
+                        enableScanner();
+                        
+                        hideLoading();
+                        showResult('success', '🎉 Payment Successful!', 
+                            'Your ₦500 payment has been confirmed!<br>' +
+                            'Your subscription is now active for 1 month.<br>' +
+                            'Transaction ID: ' + reference);
+                            
+                        // Set flag to prevent showing again
+                        paymentSuccessShown = true;
+                        localStorage.setItem('paymentSuccessShown', 'true');
+                        
+                        // Close payment modal
+                        closePaymentModal();
+                    }
+                } else {
+                    hideLoading();
+                    showResult('error', 'Verification Failed', 
+                        'Payment verification failed. Please contact support with reference: ' + reference);
+                }
+                
+            } catch (error) {
+                hideLoading();
+                console.error('Verification error:', error);
+                showResult('error', 'Verification Error', 
+                    'Could not verify payment. Please check your internet connection.');
+            }
+        }
+
+        // Simple payment verification (basic version)
+        async function simplePaymentVerification(reference) {
+            try {
+                // For now, we'll assume payment is successful
+                // In production, you should verify with your backend
+                return true;
+            } catch (error) {
+                console.error('Verification failed:', error);
+                return false;
+            }
+        }
+
+        // =============================================
+        // FREE TRIAL MANAGEMENT FUNCTIONS
+        // =============================================
+
+        function initializeTrialForNewUser() {
+            // Only initialize trial if user doesn't have a paid subscription
+            if (currentUser.subscription && currentUser.subscription.type === 'paid') {
+                return false; // User has paid, no trial needed
+            }
+            
+            // Always initialize trial for first login (today)
+            const today = new Date().toISOString().split('T')[0];
+            
+            if (!currentUser.subscription || !currentUser.subscription.startDate) {
+                // New user - initialize trial starting today
+                currentUser.subscription = {
+                    type: 'trial',
+                    startDate: new Date().toISOString(),
+                    status: 'active',
+                    trialDaysUsed: 0,
+                    isNewUser: true,
+                    lastLoginDate: today,
+                    daysUsed: 0
+                };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                console.log("🎁 New staff trial initialized for:", currentUser.name);
+                return true;
+            }
+            
+            // If user has subscription but no last login date, set it to today
+            if (!currentUser.subscription.lastLoginDate) {
+                currentUser.subscription.lastLoginDate = today;
+                currentUser.subscription.isNewUser = true;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                return true;
+            }
+            
+            // Check if this is the first login today
+            if (currentUser.subscription.lastLoginDate !== today) {
+                // Update last login date and increment days used
+                currentUser.subscription.lastLoginDate = today;
+                
+                // Calculate days since start
+                const startDate = new Date(currentUser.subscription.startDate);
+                const todayDate = new Date();
+                const timeDiff = todayDate - startDate;
+                const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                
+                // Update days used
+                currentUser.subscription.daysUsed = Math.min(daysPassed, TRIAL_DAYS);
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            
+            return true;
+        }
+
+        function checkTrialStatus() {
+            // If user has paid subscription, return no trial
+            if (currentUser.subscription && currentUser.subscription.type === 'paid') {
+                return { isValid: true, daysLeft: 0, isTrial: false, isPaid: true };
+            }
+            
+            if (!currentUser.subscription || currentUser.subscription.type !== 'trial') {
+                return { isValid: true, daysLeft: 0, isTrial: false, isPaid: false };
+            }
+            
+            // Get the signup/start date
+            const subscriptionStartDate = new Date(currentUser.subscription.startDate);
+            const today = new Date();
+            
+            // Reset times to compare only dates
+            subscriptionStartDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            
+            // Calculate days passed since signup
+            const timeDiff = today - subscriptionStartDate;
+            const daysPassed = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            
+            // Calculate days left in trial
+            const daysLeft = Math.max(TRIAL_DAYS - daysPassed, 0);
+            
+            // Ensure at least Day 1 is shown even if just logged in
+            const displayDaysPassed = Math.min(Math.max(daysPassed, 0), TRIAL_DAYS);
+            const displayDaysLeft = Math.max(daysLeft, 0);
+            
+            return {
+                isValid: daysLeft > 0,
+                daysLeft: displayDaysLeft,
+                daysPassed: displayDaysPassed,
+                isTrial: true,
+                isExpired: daysLeft <= 0,
+                isPaid: false
+            };
+        }
+
+        function updateTrialDayCounters(daysPassed, isExpired) {
+            const container = document.getElementById('trialDayCounters');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            for (let i = 1; i <= TRIAL_DAYS; i++) {
+                const dayCounter = document.createElement('div');
+                dayCounter.className = 'day-counter';
+                dayCounter.textContent = i;
+                
+                if (isExpired) {
+                    // All days passed (expired)
+                    dayCounter.classList.add('expired');
+                } else if (i <= daysPassed) {
+                    // Days that have passed (including today if it's passed midnight)
+                    dayCounter.classList.add('passed');
+                } else if (i === daysPassed + 1) {
+                    // Current/next day (if user hasn't used today yet)
+                    dayCounter.classList.add('active');
+                }
+                // Future days remain with default styling
+                
+                container.appendChild(dayCounter);
+            }
+        }
+
+        // UPDATED: Hide trial banner when user has paid subscription
+        function updateTrialBanner() {
+            const trialBanner = document.getElementById('trialBanner');
+            const trialStatus = checkTrialStatus();
+            
+            // Hide banner if user has paid subscription
+            if (trialStatus.isPaid || currentUser.subscription?.type === 'paid') {
+                trialBanner.style.display = 'none';
+                return;
+            }
+            
+            if (!trialStatus.isTrial) {
+                trialBanner.style.display = 'none';
+                return;
+            }
+            
+            trialBanner.style.display = 'block';
+            
+            if (trialStatus.isExpired) {
+                // Trial expired
+                trialBanner.classList.add('expired');
+                document.getElementById('trialTitle').textContent = getTranslation('trialExpired');
+                document.getElementById('trialMessage').textContent = 'Your free trial has ended';
+                document.getElementById('trialDaysText').textContent = '';
+                document.getElementById('trialDaysLeft').textContent = '';
+                
+                // Update progress bar
+                const progressBar = document.getElementById('trialProgressBar');
+                progressBar.classList.add('expired');
+                progressBar.style.width = '100%';
+                
+                // Update day counters
+                updateTrialDayCounters(TRIAL_DAYS, true); // All days passed
+                
+                // Disable scanner
+                disableScanner();
+            } else {
+                // Trial active
+                trialBanner.classList.remove('expired');
+                document.getElementById('trialTitle').textContent = getTranslation('freeTrialActive');
+                document.getElementById('trialMessage').textContent = getTranslation('trialDaysLeft');
+                document.getElementById('trialDaysLeft').textContent = trialStatus.daysLeft;
+                document.getElementById('trialDaysText').textContent = getTranslation('daysLeft');
+                
+                // Update progress bar
+                const progressBar = document.getElementById('trialProgressBar');
+                progressBar.classList.remove('expired');
+                const progressPercentage = (trialStatus.daysPassed / TRIAL_DAYS) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+                
+                // Update day counters
+                updateTrialDayCounters(trialStatus.daysPassed, false);
+                
+                // Enable scanner if it was disabled
+                enableScanner();
+            }
+        }
+
+        function disableScanner() {
+            // Show scanner disabled overlay
+            const scannerDisabled = document.getElementById('scannerDisabled');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            if (scannerDisabled) {
+                scannerDisabled.style.display = 'flex';
+                scannerDisabled.querySelector('#scannerDisabledTitle').textContent = 'Scanner Locked';
+                scannerDisabled.querySelector('#scannerDisabledMessage').textContent = 'Your free trial has ended. Subscribe to unlock the QR scanner.';
+            }
+            
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'none';
+            
+            // Stop scanner if it's running
+            stopScanner();
+        }
+
+        function enableScanner() {
+            // Hide scanner disabled overlay
+            const scannerDisabled = document.getElementById('scannerDisabled');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            
+            if (scannerDisabled) {
+                scannerDisabled.style.display = 'none';
+            }
+            
+            if (startBtn) startBtn.style.display = 'block';
+            if (stopBtn) stopBtn.style.display = 'none';
+            
+            // Also make sure scanner is enabled by checking trial status
+            const trialStatus = checkTrialStatus();
+            if (trialStatus.isValid || currentUser.subscription?.type === 'paid') {
+                if (scannerDisabled) scannerDisabled.style.display = 'none';
+                if (startBtn) startBtn.style.display = 'block';
+            }
+        }
+
+        function canUserScan() {
+            const trialStatus = checkTrialStatus();
+            
+            if (currentUser.subscription.type === 'paid') {
+                return true;
+            }
+            
+            if (currentUser.subscription.type === 'trial') {
+                return trialStatus.isValid;
+            }
+            
+            return false;
+        }
+
+        // =============================================
+        // LANGUAGE FUNCTIONS
+        // =============================================
+
+        function getTranslation(key) {
+            return translations[currentLanguage]?.[key] || translations['en'][key] || key;
+        }
+
+        function changeLanguage(lang, showMessage = true) {
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            const activeOption = document.querySelector(`.language-option[data-lang="${lang}"]`);
+            if (activeOption) {
+                activeOption.classList.add('active');
+            }
+            
+            currentLanguage = lang;
+            localStorage.setItem('language', lang);
+            
+            // Update all text elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                element.textContent = getTranslation(key);
+            });
+            
+            // Update all placeholder elements with data-i18n-placeholder attribute
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-i18n-placeholder');
+                element.setAttribute('placeholder', getTranslation(key));
+            });
+            
+            // Update trial banner text
+            updateTrialBanner();
+            
+            if (showMessage) {
+                showResult('success', getTranslation('languageChanged'), 
+                    `${getTranslation('languageSetTo')} ${getLanguageName(lang)}`);
+            }
+        }
+
+        function getLanguageName(code) {
+            const languages = {
+                'en': 'English',
+                'es': 'Spanish', 
+                'fr': 'French',
+                'ar': 'Arabic',
+                'zh': 'Chinese',
+                'hi': 'Hindi'
+            };
+            return languages[code] || 'Unknown';
+        }
+
+        // =============================================
+        // FIREBASE AUTH INTEGRATION - FIXED FOR SLASHES
+        // =============================================
+        
+        async function handleFirebaseSignup(userData) {
+            try {
+                // Create a clean email from the staff ID (replace slashes with dots)
+                const cleanEmail = userData.userId.replace(/\//g, '.') + '@nsmp.gov.ng';
+                
+                // Create user in Firebase Authentication with clean email
+                const userCredential = await auth.createUserWithEmailAndPassword(
+                    cleanEmail, 
+                    userData.password
+                );
+                
+                const firebaseUser = userCredential.user;
+                console.log("🔥 Firebase User Created:", firebaseUser.uid);
+                
+                // Save user data to Firebase Database
+                await database.ref('staff/' + firebaseUser.uid).set({
+                    ...userData,
+                    firebaseUid: firebaseUser.uid,
+                    cleanEmail: cleanEmail, // Store the clean email
+                    organization: 'Nigeria Security Printing and Minting Plc',
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                return firebaseUser;
+            } catch (error) {
+                console.error("Firebase Signup Error:", error);
+                throw error;
+            }
+        }
+
+        async function handleFirebaseLogin(staffId, password) {
+            try {
+                // Convert staff ID to clean email format (same as signup)
+                const cleanEmail = staffId.replace(/\//g, '.') + '@nsmp.gov.ng';
+                
+                const userCredential = await auth.signInWithEmailAndPassword(cleanEmail, password);
+                console.log("🔥 Firebase User Logged In:", userCredential.user.uid);
+                return userCredential.user;
+            } catch (error) {
+                console.error("Firebase Login Error:", error);
+                throw error;
+            }
+        }
+
+        function setupFirebaseAuthListener() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    console.log("🔥 Firebase Auth State: User is signed in", user.uid);
+                } else {
+                    console.log("🔥 Firebase Auth State: User is signed out");
+                }
+            });
+        }
+
+        // =============================================
+        // MAIN APP INITIALIZATION
+        // =============================================
+
+        function initApp() {
+            setupFirebaseAuthListener();
+            handlePasswordResetConfirmation();
+            
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                
+                auth.onAuthStateChanged((user) => {
+                    if (user) {
+                        // Initialize trial only if user doesn't have paid subscription
+                        if (currentUser.subscription?.type !== 'paid') {
+                            initializeTrialForNewUser();
+                        }
+                        showMainApp();
+                    } else {
+                        currentUser = null;
+                        localStorage.removeItem('currentUser');
+                        showAuth();
+                        showResult('info', 'Session Expired', 
+                            'Your session has expired. Please login again with your current password.');
+                    }
+                });
+            } else {
+                showAuth();
+            }
+            
+            setupEventListeners();
+            
+            const savedLanguage = localStorage.getItem('language') || 'en';
+            changeLanguage(savedLanguage, false);
+            
+            document.getElementById('clearCacheLinkContainer').style.display = 'none';
+            
+            // Check if payment success was shown before
+            const successShown = localStorage.getItem('paymentSuccessShown');
+            paymentSuccessShown = successShown === 'true';
+        }
+
+        function setupEventListeners() {
+            // Auth form toggles
+            document.getElementById('loginToggle').addEventListener('click', function() {
+                showLoginForm();
+            });
+            
+            document.getElementById('signupToggle').addEventListener('click', function() {
+                showSignupForm();
+            });
+            
+            // Forgot password link
+            document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                showForgotPasswordForm();
+            });
+            
+            // Back to login link
+            document.getElementById('backToLoginLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginForm();
+            });
+            
+            // Clear cache link
+            document.getElementById('clearCacheLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                clearAuthCache();
+            });
+            
+            // Login form submission
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleLogin();
+            });
+            
+            // Signup form submission
+            document.getElementById('signupForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleSignup();
+            });
+            
+            // Forgot password form submission
+            document.getElementById('forgotPasswordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleForgotPassword();
+            });
+            
+            // Real-time validation
+            setupRealTimeValidation();
+            
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Language options
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    changeLanguage(lang);
+                });
+            });
+        }
+
+        // Password Strength Functions
+        function checkPasswordStrength(password) {
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                symbol: /[^A-Za-z0-9]/.test(password)
+            };
+            
+            const validRequirements = Object.values(requirements).filter(Boolean).length;
+            const totalRequirements = Object.keys(requirements).length;
+            const strengthPercentage = (validRequirements / totalRequirements) * 100;
+            
+            let strengthLevel = 'weak';
+            let strengthLabel = 'Weak';
+            
+            if (strengthPercentage >= 80) {
+                strengthLevel = 'strong';
+                strengthLabel = 'Strong';
+            } else if (strengthPercentage >= 60) {
+                strengthLevel = 'good';
+                strengthLabel = 'Good';
+            } else if (strengthPercentage >= 40) {
+                strengthLevel = 'fair';
+                strengthLabel = 'Fair';
+            }
+            
+            return {
+                level: strengthLevel,
+                label: strengthLabel,
+                percentage: strengthPercentage,
+                requirements: requirements
+            };
+        }
+
+        function updatePasswordStrength(password) {
+            const strength = checkPasswordStrength(password);
+            const fillElement = document.getElementById('strengthFill');
+            const labelElement = document.getElementById('strengthLabel');
+            const valueElement = document.getElementById('strengthValue');
+            
+            if (!fillElement || !labelElement || !valueElement) {
+                return false;
+            }
+            
+            fillElement.className = 'strength-fill ' + strength.level;
+            
+            labelElement.textContent = getTranslation('passwordStrength');
+            valueElement.textContent = getTranslation(strength.label.toLowerCase());
+            valueElement.style.color = getStrengthColor(strength.level);
+            
+            updateRequirementIndicators(strength.requirements);
+            
+            return strength.percentage === 100;
+        }
+
+        function getStrengthColor(level) {
+            switch(level) {
+                case 'weak': return '#dc2626';
+                case 'fair': return '#f59e0b';
+                case 'good': return '#3b82f6';
+                case 'strong': return '#059669';
+                default: return '#94a3b8';
+            }
+        }
+
+        function updateRequirementIndicators(requirements) {
+            const requirementIds = {
+                length: 'reqLength',
+                uppercase: 'reqUppercase',
+                lowercase: 'reqLowercase',
+                number: 'reqNumber',
+                symbol: 'reqSymbol'
+            };
+            
+            Object.keys(requirements).forEach(req => {
+                const element = document.getElementById(requirementIds[req]);
+                if (element) {
+                    if (requirements[req]) {
+                        element.classList.remove('invalid');
+                        element.classList.add('valid');
+                    } else {
+                        element.classList.remove('valid');
+                        element.classList.add('invalid');
+                    }
+                }
+            });
+        }
+
+        function setupRealTimeValidation() {
+            // Login form validation
+            const loginId = document.getElementById('loginId');
+            const loginPassword = document.getElementById('loginPassword');
+            
+            if (loginId) {
+                loginId.addEventListener('input', function() {
+                    validateField(this, 'loginIdError', this.value.trim() !== '');
+                });
+            }
+            
+            if (loginPassword) {
+                loginPassword.addEventListener('input', function() {
+                    validateField(this, 'loginPasswordError', this.value.trim() !== '');
+                });
+            }
+            
+            // Signup form validation
+            const fullName = document.getElementById('fullName');
+            const email = document.getElementById('email');
+            const userId = document.getElementById('userId');
+            const department = document.getElementById('department');
+            const position = document.getElementById('position');
+            const signupPassword = document.getElementById('signupPassword');
+            const confirmPassword = document.getElementById('confirmPassword');
+            
+            if (fullName) {
+                fullName.addEventListener('input', function() {
+                    validateField(this, 'fullNameError', this.value.trim() !== '');
+                });
+            }
+            
+            if (email) {
+                email.addEventListener('input', function() {
+                    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value);
+                    validateField(this, 'emailError', isValid);
+                });
+            }
+            
+            if (userId) {
+                userId.addEventListener('input', function() {
+                    validateField(this, 'userIdError', this.value.trim() !== '');
+                });
+            }
+            
+            if (department) {
+                department.addEventListener('input', function() {
+                    validateField(this, 'departmentError', this.value.trim() !== '');
+                });
+            }
+            
+            if (position) {
+                position.addEventListener('input', function() {
+                    validateField(this, 'positionError', this.value.trim() !== '');
+                });
+            }
+            
+            // Password strength validation
+            if (signupPassword) {
+                signupPassword.addEventListener('input', function() {
+                    const password = this.value;
+                    const isValid = updatePasswordStrength(password);
+                    
+                    validateField(this, 'signupPasswordError', isValid);
+                    
+                    if (confirmPassword && confirmPassword.value) {
+                        validateField(confirmPassword, 'confirmPasswordError', confirmPassword.value === password);
+                    }
+                });
+            }
+            
+            if (confirmPassword) {
+                confirmPassword.addEventListener('input', function() {
+                    const password = signupPassword ? signupPassword.value : '';
+                    validateField(this, 'confirmPasswordError', this.value === password);
+                });
+            }
+            
+            // Forgot password form validation
+            const forgotEmail = document.getElementById('forgotEmail');
+            if (forgotEmail) {
+                forgotEmail.addEventListener('input', function() {
+                    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value);
+                    validateField(this, 'forgotEmailError', isValid);
+                });
+            }
+        }
+
+        function validateField(field, errorId, isValid) {
+            const errorElement = document.getElementById(errorId);
+            
+            if (!field || !errorElement) return isValid;
+            
+            if (isValid) {
+                field.parentElement.classList.remove('error');
+                errorElement.style.display = 'none';
+                errorElement.textContent = '';
+            } else {
+                field.parentElement.classList.add('error');
+                errorElement.style.display = 'block';
+            }
+            
+            return isValid;
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('signupForm').classList.remove('active');
+            document.getElementById('forgotPasswordForm').classList.remove('active');
+            document.getElementById('loginToggle').classList.add('active');
+            document.getElementById('signupToggle').classList.remove('active');
+        }
+
+        function showSignupForm() {
+            document.getElementById('signupForm').classList.add('active');
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('forgotPasswordForm').classList.remove('active');
+            document.getElementById('signupToggle').classList.add('active');
+            document.getElementById('loginToggle').classList.remove('active');
+        }
+
+        function showForgotPasswordForm() {
+            document.getElementById('forgotPasswordForm').classList.add('active');
+            document.getElementById('loginForm').classList.remove('active');
+            document.getElementById('signupForm').classList.remove('active');
+            document.getElementById('loginToggle').classList.remove('active');
+            document.getElementById('signupToggle').classList.remove('active');
+        }
+
+        async function handleLogin() {
+            const staffId = document.getElementById('loginId').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            const isIdValid = validateField(document.getElementById('loginId'), 'loginIdError', staffId.trim() !== '');
+            const isPasswordValid = validateField(document.getElementById('loginPassword'), 'loginPasswordError', password.trim() !== '');
+            
+            if (!isIdValid || !isPasswordValid) {
+                showResult('error', getTranslation('validationError'), getTranslation('fillAllFields'));
+                return;
+            }
+            
+            showLoading(getTranslation('signingIn'));
+            
+            try {
+                const user = users.find(u => u.userId === staffId);
+                
+                if (!user) {
+                    hideLoading();
+                    showResult('error', getTranslation('loginFailed'), getTranslation('invalidCredentials'));
+                    return;
+                }
+                
+                await handleFirebaseLogin(staffId, password);
+                loginUser(user);
+                
+            } catch (error) {
+                hideLoading();
+                console.error("Login error:", error);
+                
+                if (error.code === 'auth/wrong-password') {
+                    showResult('error', 'Login Failed', 
+                        'The password is incorrect. If you recently reset your password, please use the new password. ' +
+                        'Otherwise, you may need to reset your password again.');
+                } else if (error.code === 'auth/user-not-found') {
+                    showResult('error', 'Login Failed', 'No account found with these credentials.');
+                } else if (error.code === 'auth/too-many-requests') {
+                    showResult('error', 'Login Failed', 'Too many failed attempts. Please try again later.');
+                } else {
+                    showResult('error', 'Login Failed', 'An error occurred during login. Please try again.');
+                }
+            }
+        }
+
+        async function handleSignup() {
+            const name = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const userId = document.getElementById('userId').value;
+            const department = document.getElementById('department').value;
+            const position = document.getElementById('position').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            const isNameValid = validateField(document.getElementById('fullName'), 'fullNameError', name.trim() !== '');
+            const isEmailValid = validateField(document.getElementById('email'), 'emailError', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+            const isUserIdValid = validateField(document.getElementById('userId'), 'userIdError', userId.trim() !== '');
+            const isDepartmentValid = validateField(document.getElementById('department'), 'departmentError', department.trim() !== '');
+            const isPositionValid = validateField(document.getElementById('position'), 'positionError', position.trim() !== '');
+            
+            const isPasswordValid = updatePasswordStrength(password);
+            validateField(document.getElementById('signupPassword'), 'signupPasswordError', isPasswordValid);
+            
+            const isConfirmPasswordValid = validateField(document.getElementById('confirmPassword'), 'confirmPasswordError', password === confirmPassword);
+            const isTermsValid = validateField(document.getElementById('agreeTerms'), 'termsError', agreeTerms);
+            
+            if (!isNameValid || !isEmailValid || !isUserIdValid || !isDepartmentValid || 
+                !isPositionValid || !isPasswordValid || !isConfirmPasswordValid || !isTermsValid) {
+                showResult('error', getTranslation('validationError'), getTranslation('fillAllFields'));
+                return;
+            }
+            
+            if (users.find(u => u.email === email)) {
+                showResult('error', getTranslation('registrationFailed'), getTranslation('emailExists'));
+                return;
+            }
+            
+            if (users.find(u => u.userId === userId)) {
+                showResult('error', getTranslation('registrationFailed'), getTranslation('staffIdExists'));
+                return;
+            }
+            
+            showLoading(getTranslation('creatingAccount'));
+            
+            try {
+                const userData = {
+                    id: 'NSPM' + (users.length + 1001),
+                    name: name,
+                    email: email,
+                    password: password,
+                    userId: userId,
+                    department: department,
+                    position: position,
+                    organization: 'Nigeria Security Printing and Minting Plc',
+                    role: 'staff',
+                    subscription: {
+                        type: 'trial',
+                        startDate: new Date().toISOString(),
+                        status: 'active',
+                        trialDaysUsed: 0,
+                        isNewUser: true,
+                        lastLoginDate: new Date().toISOString().split('T')[0],
+                        daysUsed: 0
+                    }
+                };
+                
+                const firebaseUser = await handleFirebaseSignup(userData);
+                userData.firebaseUid = firebaseUser.uid;
+                
+                users.push(userData);
+                localStorage.setItem('nsmpUsers', JSON.stringify(users));
+                
+                loginUser(userData);
+                hideLoading();
+                
+                showResult('success', getTranslation('accountCreated'), 
+                    getTranslation('welcomeMessage'));
+                
+            } catch (error) {
+                hideLoading();
+                console.error("Registration Error:", error);
+                
+                let errorMessage = getTranslation('registrationFailedGeneric');
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = getTranslation('emailExistsFirebase');
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = getTranslation('weakPassword');
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = getTranslation('invalidEmail');
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage = getTranslation('networkError');
+                }
+                
+                showResult('error', getTranslation('registrationFailed'), errorMessage);
+            }
+        }
+
+        async function handleForgotPassword() {
+            const email = document.getElementById('forgotEmail').value.trim();
+            
+            const isEmailValid = validateField(
+                document.getElementById('forgotEmail'), 
+                'forgotEmailError', 
+                /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+            );
+            
+            if (!isEmailValid) {
+                showResult('error', getTranslation('validationError'), getTranslation('validEmailRequired'));
+                return;
+            }
+            
+            showLoading(getTranslation('sendingInstructions'));
+            
+            try {
+                console.log("Sending password reset email to:", email);
+                await auth.sendPasswordResetEmail(email);
+                
+                hideLoading();
+                
+                console.log("Password reset email sent successfully");
+                showResult('success', 
+                    getTranslation('checkEmail'), 
+                    'Password reset instructions have been sent to your email address. ' +
+                    'Please check your inbox and spam folder.'
+                );
+                
+                setTimeout(() => {
+                    showLoginForm();
+                }, 3000);
+                
+            } catch (error) {
+                hideLoading();
+                console.error("Password reset error:", error);
+                
+                let errorMessage = 'Failed to send reset email. ';
+                
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage += 'No account found with this email address.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage += 'Please enter a valid email address.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage += 'Too many reset attempts. Please try again later.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage += 'Network error. Please check your connection.';
+                        break;
+                    default:
+                        errorMessage += 'Please try again.';
+                }
+                
+                showResult('error', 'Password Reset Failed', errorMessage);
+            }
+        }
+
+        function showLoading(message = 'Processing...') {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingMessage = document.getElementById('loadingMessage');
+            
+            if (loadingOverlay && loadingMessage) {
+                loadingMessage.textContent = message;
+                loadingOverlay.style.display = 'flex';
+            }
+        }
+
+        function hideLoading() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+
+        function loginUser(user) {
+            currentUser = user;
+            
+            // Clear any pending payment reference on login to prevent auto-payment
+            localStorage.removeItem('pendingPaymentRef');
+            localStorage.removeItem('paymentSuccessShown');
+            
+            // Initialize trial only if user doesn't have paid subscription
+            if (currentUser.subscription?.type !== 'paid') {
+                initializeTrialForNewUser();
+            }
+            
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            
+            hideLoading();
+            showMainApp();
+            initializeMainApp();
+        }
+        
+        function logout() {
+            if (confirm(getTranslation('confirmLogout'))) {
+                stopScanner();
+                
+                auth.signOut().then(() => {
+                    console.log("User signed out from Firebase");
+                }).catch((error) => {
+                    console.error("Firebase sign out error:", error);
+                });
+                
+                currentUser = null;
+                localStorage.removeItem('currentUser');
+                localStorage.removeItem('paymentSuccessShown');
+                showAuth();
+                
+                document.getElementById('loginForm').reset();
+                document.getElementById('signupForm').reset();
+                document.getElementById('forgotPasswordForm').reset();
+                
+                document.querySelectorAll('.error-message').forEach(el => {
+                    el.style.display = 'none';
+                });
+                document.querySelectorAll('.input-with-icon').forEach(el => {
+                    el.classList.remove('error');
+                });
+                
+                const strengthFill = document.getElementById('strengthFill');
+                const strengthValue = document.getElementById('strengthValue');
+                if (strengthFill) strengthFill.className = 'strength-fill';
+                if (strengthValue) strengthValue.textContent = '';
+                document.querySelectorAll('.requirement').forEach(el => {
+                    el.classList.remove('valid');
+                    el.classList.add('invalid');
+                });
+            }
+        }
+        
+        function showAuth() {
+            document.getElementById('authSection').style.display = 'flex';
+            document.getElementById('mainApp').style.display = 'none';
+            document.getElementById('bottomNav').style.display = 'none';
+            document.getElementById('clearCacheLinkContainer').style.display = 'none';
+        }
+        
+        function showMainApp() {
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('mainApp').style.display = 'block';
+            document.getElementById('bottomNav').style.display = 'flex';
+            document.getElementById('clearCacheLinkContainer').style.display = 'block';
+            
+            if (currentUser) {
+                document.getElementById('staffName').textContent = currentUser.name;
+                document.getElementById('staffId').textContent = currentUser.userId;
+                document.getElementById('staffDepartment').textContent = currentUser.department;
+                document.getElementById('staffPosition').textContent = currentUser.position;
+            }
+            
+            // Update trial banner - will be hidden for paid users
+            updateTrialBanner();
+            
+            // Reset payment success shown flag when showing main app
+            // This ensures payment success is only shown once after payment
+            if (paymentSuccessShown) {
+                paymentSuccessShown = false;
+                localStorage.removeItem('paymentSuccessShown');
+            }
+        }
+
+        // =============================================
+        // MAIN APPLICATION FUNCTIONALITY
+        // =============================================
+
+        function initializeMainApp() {
+            console.log("🚀 Initializing NSPM Staff App for user:", currentUser.name);
+            loadStaffData();
+            initializeSubscription();
+            updateTrialBanner();
+            console.log("✅ NSPM Staff App initialized for:", currentUser.name);
+        }
+
+        function loadStaffData() {
+            const userKey = `staffCheckpoints_${currentUser.id}`;
+            const recordsKey = `attendanceRecords_${currentUser.id}`;
+            
+            const savedCheckpoints = localStorage.getItem(userKey);
+            const savedRecords = localStorage.getItem(recordsKey);
+            
+            if (savedCheckpoints) {
+                staffCheckpoints = JSON.parse(savedCheckpoints);
+                console.log(`📍 Loaded ${staffCheckpoints.length} checkpoints for staff ${currentUser.name}`);
+            } else {
+                // Don't pre-populate with any checkpoints - start with empty array
+                staffCheckpoints = [];
+                saveStaffData();
+            }
+            
+            if (savedRecords) {
+                attendanceRecords = JSON.parse(savedRecords);
+                console.log(`📊 Loaded ${attendanceRecords.length} attendance records for staff ${currentUser.name}`);
+            }
+            
+            loadAttendanceHistory();
+            generateSummaryTable();
+        }
+
+        function saveStaffData() {
+            const userKey = `staffCheckpoints_${currentUser.id}`;
+            const recordsKey = `attendanceRecords_${currentUser.id}`;
+            
+            localStorage.setItem(userKey, JSON.stringify(staffCheckpoints));
+            localStorage.setItem(recordsKey, JSON.stringify(attendanceRecords));
+        }
+
+        function initializeSubscription() {
+            if (!currentUser.subscription) {
+                currentUser.subscription = {
+                    type: 'trial',
+                    startDate: new Date().toISOString(),
+                    status: 'active',
+                    trialDaysUsed: 0,
+                    isNewUser: true,
+                    lastLoginDate: new Date().toISOString().split('T')[0],
+                    daysUsed: 0
+                };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            }
+            updateSubscriptionUI();
+        }
+
+        // UPDATED: Show different status for paid users
+        function updateSubscriptionUI() {
+            const subscriptionType = currentUser.subscription.type;
+            const subscriptionStartDate = new Date(currentUser.subscription.startDate);
+            
+            if (subscriptionType === 'trial') {
+                const trialStatus = checkTrialStatus();
+                
+                if (trialStatus.isValid) {
+                    const statusText = `${getTranslation('active')} (${getTranslation('trial')} - ${trialStatus.daysLeft} ${getTranslation('daysLeft')})`;
+                    document.getElementById('statusValue').textContent = statusText;
+                    document.getElementById('subscriptionStatus').style.color = 'var(--warning)';
+                    
+                    const trialEndDate = new Date(subscriptionStartDate);
+                    trialEndDate.setDate(trialEndDate.getDate() + TRIAL_DAYS);
+                    document.getElementById('expiresValue').textContent = formatDate(trialEndDate);
+                } else {
+                    document.getElementById('statusValue').textContent = getTranslation('expired');
+                    document.getElementById('subscriptionStatus').style.color = 'var(--danger)';
+                    document.getElementById('expiresValue').textContent = getTranslation('pleaseSubscribe');
+                }
+            } else if (subscriptionType === 'paid') {
+                // Paid subscription
+                document.getElementById('statusValue').textContent = `${getTranslation('active')} (${getTranslation('paid')})`;
+                document.getElementById('subscriptionStatus').style.color = 'var(--primary)';
+                const expiry = currentUser.subscription.expiry;
+                document.getElementById('expiresValue').textContent = formatDate(expiry);
+            }
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.nav-item[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            if (tabName === 'scanner') {
+                const cameraPermission = document.getElementById('cameraPermission');
+                const video = document.getElementById('video');
+                
+                if (cameraPermission) cameraPermission.style.display = 'none';
+                if (video) video.style.display = 'none';
+                
+                if (!isScannerActive) {
+                    // Check if scanner should be enabled
+                    if (!canUserScan()) {
+                        disableScanner();
+                    } else {
+                        enableScanner();
+                    }
+                }
+            } else {
+                stopScanner();
+            }
+            
+            if (tabName === 'history') {
+                loadAttendanceHistory();
+                generateSummaryTable();
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLightMode = document.body.classList.contains('light-mode');
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.innerHTML = isLightMode ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            }
+            localStorage.setItem('darkMode', isLightMode);
+        }
+
+        function showNewDepartmentModal() {
+            document.getElementById('newDepartmentModal').style.display = 'flex';
+            document.getElementById('locationCode').value = '';
+            document.getElementById('locationName').value = '';
+            document.getElementById('locationFloor').value = '';
+            document.getElementById('locationType').value = 'office';
+        }
+
+        function closeNewDepartmentModal() {
+            document.getElementById('newDepartmentModal').style.display = 'none';
+        }
+
+        function addNewDepartment() {
+            const locationCode = document.getElementById('locationCode').value.trim();
+            const locationName = document.getElementById('locationName').value.trim();
+            const floor = document.getElementById('locationFloor').value.trim();
+            const locationType = document.getElementById('locationType').value;
+            
+            if (!locationCode || !locationName || !floor) {
+                showResult('error', getTranslation('missingInformation'), getTranslation('fillAllFields'));
+                return;
+            }
+            
+            if (staffCheckpoints.some(checkpoint => checkpoint.code === locationCode)) {
+                showResult('error', getTranslation('locationExists'), getTranslation('locationAlreadyRegistered'));
+                return;
+            }
+            
+            const newCheckpoint = {
+                code: locationCode,
+                name: locationName,
+                floor: floor,
+                type: locationType,
+                registeredDate: new Date().toISOString()
+            };
+            
+            staffCheckpoints.push(newCheckpoint);
+            saveStaffData();
+            closeNewDepartmentModal();
+            
+            showResult('success', getTranslation('locationAdded'), 
+                `${locationCode} - ${locationName}<br>
+                 ${getTranslation('floor')}: ${floor}<br>
+                 ${getTranslation('locationType')}: ${getTranslation(locationType)}`);
+                 
+            generateSummaryTable();
+        }
+
+        // Helper function to check if a checkpoint was registered by the user
+        function isUserRegisteredCheckpoint(checkpoint) {
+            // Check if checkpoint has a registeredDate
+            if (!checkpoint.registeredDate) {
+                return false;
+            }
+            return true;
+        }
+
+        function generateSummaryTable() {
+            const container = document.getElementById('summaryTableBody');
+            const departmentFilter = document.getElementById('departmentFilter');
+            
+            if (!container) return;
+            
+            if (departmentFilter) {
+                departmentFilter.innerHTML = '<option value="">' + getTranslation('allDepartments') + '</option>';
+                
+                // Only show checkpoints that have attendance records or were explicitly added by user
+                staffCheckpoints.forEach(checkpoint => {
+                    // Check if checkpoint has attendance records
+                    const checkpointRecords = attendanceRecords.filter(record => record.locationCode === checkpoint.code);
+                    
+                    // Only add to filter if checkpoint has attendance records OR was added after initial setup
+                    if (checkpointRecords.length > 0 || isUserRegisteredCheckpoint(checkpoint)) {
+                        const option = document.createElement('option');
+                        option.value = checkpoint.code;
+                        option.textContent = `${checkpoint.code} - ${checkpoint.name}`;
+                        departmentFilter.appendChild(option);
+                    }
+                });
+            }
+            
+            // Filter checkpoints to show only those with attendance or user-registered
+            const filteredCheckpoints = staffCheckpoints.filter(checkpoint => {
+                const checkpointRecords = attendanceRecords.filter(record => record.locationCode === checkpoint.code);
+                return checkpointRecords.length > 0 || isUserRegisteredCheckpoint(checkpoint);
+            });
+            
+            if (filteredCheckpoints.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                            ${getTranslation('noLocationsAdded')}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            filteredCheckpoints.forEach(checkpoint => {
+                const checkpointRecords = attendanceRecords.filter(record => record.locationCode === checkpoint.code);
+                const total = checkpointRecords.length;
+                const present = checkpointRecords.filter(record => record.status === 'present').length;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${checkpoint.code}</td>
+                    <td>${checkpoint.name}</td>
+                    <td>${present}</td>
+                    <td>${total}</td>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function loadAttendanceHistory() {
+            const container = document.getElementById('attendanceTableBody');
+            if (!container) return;
+            
+            const departmentFilter = document.getElementById('departmentFilter') ? document.getElementById('departmentFilter').value : '';
+            const statusFilter = document.getElementById('statusFilter') ? document.getElementById('statusFilter').value : '';
+            
+            // Get only registered checkpoint codes
+            const registeredCheckpointCodes = staffCheckpoints.filter(checkpoint => 
+                isUserRegisteredCheckpoint(checkpoint)
+            ).map(checkpoint => checkpoint.code);
+            
+            // Filter attendance records to only show those for registered checkpoints
+            let filteredRecords = attendanceRecords.filter(record => 
+                registeredCheckpointCodes.includes(record.locationCode)
+            );
+            
+            if (departmentFilter) {
+                filteredRecords = filteredRecords.filter(record => record.locationCode === departmentFilter);
+            }
+            
+            if (statusFilter) {
+                filteredRecords = filteredRecords.filter(record => record.status === statusFilter);
+            }
+            
+            if (filteredRecords.length === 0) {
+                container.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                            ${getTranslation('noAttendanceRecords')}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            container.innerHTML = '';
+            filteredRecords.forEach(record => {
+                const checkpoint = staffCheckpoints.find(c => c.code === record.locationCode);
+                const statusClass = record.status === 'present' ? 'status-present' : 'status-absent';
+                const statusText = record.status === 'present' ? getTranslation('present') : getTranslation('absent');
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.locationCode}</td>
+                    <td>${checkpoint ? checkpoint.name : getTranslation('unknownLocation')}</td>
+                    <td>${formatDate(record.date)}</td>
+                    <td>${formatTime(record.timestamp)}</td>
+                    <td>${record.checkpoint}</td>
+                    <td class="${statusClass}">${statusText}</td>
+                    <td class="action-cell">
+                        <button class="delete-record-btn" onclick="deleteAttendanceRecord('${record.id}')" title="${getTranslation('deleteRecord')}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function filterAttendanceHistory() {
+            loadAttendanceHistory();
+        }
+
+        function deleteAttendanceRecord(recordId) {
+            if (confirm(getTranslation('confirmDeleteRecord'))) {
+                attendanceRecords = attendanceRecords.filter(record => record.id !== recordId);
+                saveStaffData();
+                loadAttendanceHistory();
+                generateSummaryTable();
+                showResult('success', getTranslation('recordDeleted'), getTranslation('recordDeletedSuccessfully'));
+            }
+        }
+
+        async function startScanner() {
+            if (isScannerActive) return;
+            
+            // Check trial status
+            if (!canUserScan()) {
+                showResult('error', getTranslation('subscriptionRequired'), getTranslation('subscribeToUseScanner'));
+                switchTab('premium');
+                return;
+            }
+            
+            if (staffCheckpoints.length === 0) {
+                showResult('warning', getTranslation('noLocationsRegistered'), 
+                    getTranslation('addCheckpointsBeforeScanning'));
+                showNewDepartmentModal();
+                return;
+            }
+            
+            const video = document.getElementById('video');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const cameraPermission = document.getElementById('cameraPermission');
+            const cameraDarkOverlay = document.getElementById('cameraDarkOverlay');
+            
+            try {
+                const currentStream = video.srcObject;
+                if (currentStream) {
+                    if (cameraPermission) cameraPermission.style.display = 'none';
+                    if (cameraDarkOverlay) cameraDarkOverlay.style.display = 'none';
+                    if (video) video.style.display = 'block';
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (stopBtn) stopBtn.style.display = 'block';
+                    scanInterval = setInterval(scanQRCode, 500);
+                    isScannerActive = true;
+                    
+                    // Update camera container state
+                    const cameraContainer = document.querySelector('.camera-container');
+                    cameraContainer.classList.remove('camera-dark');
+                    cameraContainer.classList.add('camera-active');
+                    
+                    return;
+                }
+                
+                let constraints = { 
+                    video: { 
+                        facingMode: { ideal: 'environment' },
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                };
+                
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = videoStream;
+                
+                video.onloadedmetadata = function() {
+                    if (cameraPermission) cameraPermission.style.display = 'none';
+                    if (cameraDarkOverlay) cameraDarkOverlay.style.display = 'none';
+                    if (video) video.style.display = 'block';
+                    
+                    if (startBtn) startBtn.style.display = 'none';
+                    if (stopBtn) stopBtn.style.display = 'block';
+                    
+                    scanInterval = setInterval(scanQRCode, 500);
+                    isScannerActive = true;
+                    
+                    // Update camera container state
+                    const cameraContainer = document.querySelector('.camera-container');
+                    cameraContainer.classList.remove('camera-dark');
+                    cameraContainer.classList.add('camera-active');
+                    
+                    console.log("✅ Camera started successfully");
+                };
+                
+            } catch (err) {
+                console.error('Camera access error:', err);
+                if (cameraPermission) cameraPermission.style.display = 'flex';
+                if (cameraDarkOverlay) cameraDarkOverlay.style.display = 'none';
+                if (video) video.style.display = 'none';
+                
+                let errorMessage = getTranslation('unableToAccessCamera') + ' ';
+                
+                if (err.name === 'NotAllowedError') {
+                    errorMessage += getTranslation('allowCameraAccess');
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage += getTranslation('noCameraFound');
+                } else if (err.name === 'NotSupportedError') {
+                    errorMessage += getTranslation('cameraNotSupported');
+                } else {
+                    errorMessage += getTranslation('checkPermissionsAndTryAgain');
+                }
+                
+                showResult('error', getTranslation('cameraError'), errorMessage);
+                
+                // Show camera permission UI
+                const cameraContainer = document.querySelector('.camera-container');
+                cameraContainer.classList.add('camera-dark');
+                cameraContainer.classList.remove('camera-active');
+            }
+        }
+
+        function stopScanner() {
+            if (!isScannerActive) return;
+            
+            const video = document.getElementById('video');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const cameraPermission = document.getElementById('cameraPermission');
+            const cameraDarkOverlay = document.getElementById('cameraDarkOverlay');
+            
+            scanCooldown = false;
+            lastScannedCode = null;
+            
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                if (video) video.srcObject = null;
+                videoStream = null;
+            }
+            
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+            
+            if (cameraPermission) cameraPermission.style.display = 'none';
+            if (cameraDarkOverlay) cameraDarkOverlay.style.display = 'flex';
+            if (video) video.style.display = 'none';
+            
+            if (startBtn) startBtn.style.display = 'block';
+            if (stopBtn) stopBtn.style.display = 'none';
+            
+            isScannerActive = false;
+            
+            // Update camera container state
+            const cameraContainer = document.querySelector('.camera-container');
+            cameraContainer.classList.add('camera-dark');
+            cameraContainer.classList.remove('camera-active');
+            
+            console.log("🛑 Scanner stopped completely");
+        }
+
+        function scanQRCode() {
+            const video = document.getElementById('video');
+            
+            if (!video || video.readyState !== video.HAVE_ENOUGH_DATA || !isScannerActive || scanCooldown) {
+                return;
+            }
+            
+            try {
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code && code.data !== lastScannedCode) {
+                    console.log("✅ QR Code detected - PROCESSING:", code.data);
+                    
+                    scanCooldown = true;
+                    lastScannedCode = code.data;
+                    
+                    processQRCode(code.data);
+                    
+                    setTimeout(() => {
+                        stopScanner();
+                    }, 1000);
+                }
+            } catch (err) {
+                console.error("❌ QR scanning error:", err);
+            }
+        }
+
+        async function processQRCode(qrData) {
+            try {
+                console.log("🔄 Processing QR code:", qrData);
+                
+                const staffId = currentUser.userId;
+                const staffName = currentUser.name;
+                
+                if (!staffId || !staffName) {
+                    throw new Error(getTranslation('staffInfoNotFound'));
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(qrData);
+                } catch (parseError) {
+                    throw new Error(getTranslation('invalidQRCode'));
+                }
+
+                if (!data.checkpointId || !data.locationCode) {
+                    throw new Error(getTranslation('invalidQRCodeMissingFields'));
+                }
+
+                const isCheckpointRegistered = staffCheckpoints.some(checkpoint => checkpoint.code === data.locationCode);
+                if (!isCheckpointRegistered) {
+                    const locationDisplay = `${data.locationCode} - ${data.locationName || data.locationCode}`;
+                    
+                    showResult('error', getTranslation('locationNotRegistered'), 
+                        `${getTranslation('notRegisteredFor')} ${locationDisplay}. ${getTranslation('addCheckpointFirst')}`);
+                    
+                    setTimeout(() => {
+                        scanCooldown = false;
+                        lastScannedCode = null;
+                    }, 3000);
+                    return;
+                }
+
+                const today = new Date().toISOString().split('T')[0];
+                const currentTime = new Date().getTime();
+                
+                const todayRecords = attendanceRecords.filter(record => 
+                    record.locationCode === data.locationCode && 
+                    record.date === today
+                );
+                
+                if (todayRecords.length > 0) {
+                    showResult('warning', getTranslation('attendanceAlreadyRecorded'), 
+                        getTranslation('alreadyRecordedAttendanceToday'));
+                    
+                    setTimeout(() => {
+                        scanCooldown = false;
+                        lastScannedCode = null;
+                    }, 3000);
+                    return;
+                }
+                
+                const attendanceRef = database.ref(`attendance/${data.checkpointId}`);
+                const existingSnapshot = await attendanceRef.orderByChild('staffId').equalTo(staffId).once('value');
+                
+                if (existingSnapshot.exists()) {
+                    throw new Error(getTranslation('alreadyRecordedAttendanceForCheckpoint'));
+                }
+                
+                const staffRecordKey = `staff_${staffId.replace(/\//g, '_')}_${currentTime}`;
+                
+                await attendanceRef.child(staffRecordKey).set({
+                    staffId: staffId,
+                    staffName: staffName,
+                    locationCode: data.locationCode,
+                    locationName: data.locationName || data.locationCode,
+                    checkpointId: data.checkpointId,
+                    date: today,
+                    time: new Date().toLocaleTimeString(),
+                    status: 'present',
+                    checkpoint: data.checkpoint || getTranslation('unknown'),
+                    timestamp: currentTime
+                });
+
+                console.log("✅ Attendance recorded successfully!");
+                
+                const newRecord = {
+                    id: staffRecordKey,
+                    staffId: staffId,
+                    staffName: staffName,
+                    locationCode: data.locationCode,
+                    locationName: data.locationName || data.locationCode,
+                    date: today,
+                    time: new Date().toLocaleTimeString(),
+                    status: 'present',
+                    checkpoint: data.checkpoint || getTranslation('unknown'),
+                    timestamp: currentTime
+                };
+                
+                attendanceRecords.unshift(newRecord);
+                saveStaffData();
+                
+                showResult('success', getTranslation('attendanceRecorded'), 
+                    `Attendance recorded successfully!<br><br>
+                     ${getTranslation('location')}: ${data.locationCode}<br>
+                     ${getTranslation('staff')}: ${staffName} (${staffId})<br>
+                     ${getTranslation('time')}: ${formatTime(currentTime)}<br>
+                     ${getTranslation('status')}: ✅ ${getTranslation('present')}<br>
+                     ${getTranslation('checkpoint')}: ${data.checkpoint || getTranslation('unknown')}`);
+                     
+                loadAttendanceHistory();
+                generateSummaryTable();
+                   
+            } catch (error) {
+                console.error("❌ QR processing error:", error);
+                scanCooldown = false;
+                lastScannedCode = null;
+                showResult('error', getTranslation('scanFailed'), error.message);
+            }
+        }
+
+        function showPaymentForm(method) {
+            currentPaymentMethod = method;
+            document.getElementById('paymentModal').style.display = 'flex';
+            
+            const paystackEmail = document.getElementById('paystackEmail');
+            if (paystackEmail && currentUser && currentUser.email) {
+                paystackEmail.value = currentUser.email;
+            }
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            currentPaymentMethod = null;
+        }
+
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                const options = { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                };
+                
+                return date.toLocaleDateString('en-US', options);
+            } catch (error) {
+                return 'Invalid Date';
+            }
+        }
+
+        function formatTime(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleTimeString('en-US', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } catch (error) {
+                return 'Invalid Time';
+            }
+        }
+
+        function showResult(type, title, message) {
+            const modal = document.getElementById('resultModal');
+            const content = document.getElementById('resultContent');
+            const icon = document.getElementById('resultIcon');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultMessage = document.getElementById('resultMessage');
+            
+            if (!modal || !content || !icon || !resultTitle || !resultMessage) return;
+            
+            content.className = `result-content ${type === 'success' ? 'result-success' : type === 'error' ? 'result-error' : ''}`;
+            
+            if (type === 'processing') {
+                icon.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            } else {
+                icon.innerHTML = type === 'success' ? '<i class="fas fa-check-circle"></i>' : type === 'error' ? '<i class="fas fa-times-circle"></i>' : '<i class="fas fa-info-circle"></i>';
+            }
+            
+            resultTitle.textContent = title;
+            resultMessage.innerHTML = message;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeResult() {
+            const modal = document.getElementById('resultModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function clearAuthCache() {
+            auth.signOut();
+            
+            localStorage.removeItem('currentUser');
+            localStorage.removeItem('nsmpUsers');
+            localStorage.removeItem('paymentSuccessShown');
+            localStorage.removeItem('pendingPaymentRef'); // Also clear pending payments
+            sessionStorage.clear();
+            
+            currentUser = null;
+            
+            showResult('success', getTranslation('cacheCleared'), 
+                'All cached login data has been cleared. Please login again.');
+            
+            showAuth();
+            
+            document.getElementById('loginForm').reset();
+            document.getElementById('signupForm').reset();
+            document.getElementById('forgotPasswordForm').reset();
+        }
+
+        function handlePasswordResetConfirmation() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode');
+            const actionCode = urlParams.get('oobCode');
+            
+            if (mode === 'resetPassword' && actionCode) {
+                showResult('success', getTranslation('passwordResetConfirmed'), 
+                    getTranslation('useNewPassword'));
+                
+                const newUrl = window.location.origin + window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+                
+                showLoginForm();
+            }
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            initApp();
+            
+            // Check for saved theme
+            const savedDarkMode = localStorage.getItem('darkMode');
+            if (savedDarkMode === 'true') {
+                document.body.classList.add('light-mode');
+                const themeToggle = document.getElementById('themeToggle');
+                if (themeToggle) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
